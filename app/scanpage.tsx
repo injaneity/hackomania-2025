@@ -2,6 +2,8 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useRef } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, ToastAndroid } from 'react-native';
 import { router } from 'expo-router';
+import React from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function App() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -58,9 +60,9 @@ export default function App() {
         // barcodeScannerSettings={{ barCodeTypes: [CameraView.Constants.BarCodeType.qr] }}
       >
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-            <Text style={styles.text}>Flip Camera</Text>
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+          <MaterialIcons name="flip-camera-ios" size={36} color="white" />
+        </TouchableOpacity>
         </View>
       </CameraView>
     </View>
@@ -80,19 +82,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   buttonContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
-    margin: 64,
-  },
-  button: {
-    flex: 1,
-    alignSelf: 'flex-end',
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
     alignItems: 'center',
   },
-  text: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+  button: {
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 30,
+    padding: 15,
   },
 });
