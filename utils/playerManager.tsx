@@ -7,10 +7,17 @@ interface Player {
 // ~ gong
 
 class PlayerManager {
-  private players: Player[] = [];
+
+  private players: Player[] = [
+    { id: '100', username: 'Placerholder 1', score: 0 },
+    { id: '101', username: 'Placerholder 2', score: 0 }
+  ]; // im initalizing 2 players here to bypass the null issue later
 
   addPlayer(id: string, username: string): void {
-    if (this.players.length < 2) {
+    const existingPlayerIndex = this.players.findIndex(p => p.id === id);
+    if (existingPlayerIndex !== -1) {
+      this.players[existingPlayerIndex].username = username;
+    } else if (this.players.length < 2) {
       this.players.push({ id, username, score: 0 });
     }
   }
@@ -29,6 +36,7 @@ class PlayerManager {
   reset(): void {
     this.players = [];
   }
+
 }
 
 export const playerManager = new PlayerManager();
