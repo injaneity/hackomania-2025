@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  
-  StyleSheet, 
-  TouchableOpacity, 
-  Modal 
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Typography } from '@/constants/Typography';
 import { Text } from '@/components/ui/StyledText';
 import { leaderboardManager, PlayerScore } from '@/utils/leaderboardManager';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import QRCode from 'react-native-qrcode-svg';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+} from "react-native";
+import ProximityMeter from "@/components/ProximityMeter";
 
 export default function Dashboard() {
   // Replace with actual email or unique identifier for the QR code
@@ -38,7 +40,7 @@ export default function Dashboard() {
   const formatScore = (score: number) => score.toLocaleString();
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Modal to display the QR Code */}
       <Modal
         visible={qrVisible}
@@ -84,7 +86,9 @@ export default function Dashboard() {
             <Text style={styles.scheduleItem}>Hackomania 2025</Text>
             <Text style={styles.scheduleItem}>Date: February 15, 2025</Text>
             <Text style={styles.scheduleItem}>Time: 10:00 AM - 10:00 PM</Text>
-            <Text style={styles.scheduleItem}>Location: CapitaGreen, Singapore</Text>
+            <Text style={styles.scheduleItem}>
+              Location: CapitaGreen, Singapore
+            </Text>
           </View>
         </View>
 
@@ -124,53 +128,58 @@ export default function Dashboard() {
           <Text style={styles.todoItem}>2. Finalise team members</Text>
         </View>
       </View>
-    </View>
+
+      <View>
+        <Text style={styles.sectionTitle}>Proximity Tracker</Text>
+        <ProximityMeter /> {/* Proximity Meter integrated here */}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: "black",
     padding: 16,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#333',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#333",
     padding: 16,
     borderRadius: 8,
     marginBottom: 16,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#aaa',
+    color: "#aaa",
   },
   qrContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   qrCode: {
     fontSize: 12,
-    color: '#aaa',
+    color: "#aaa",
     marginTop: 4,
   },
   mainContent: {
-    flexDirection: 'row',
+    flexDirection: "row",
     flex: 1,
     gap: 16,
   },
   schedule: {
     flex: 1,
-    backgroundColor: '#333',
+    backgroundColor: "#333",
     borderRadius: 8,
     padding: 16,
-    justifyContent: 'flex-start',
+    justifyContent: "flex-start",
   },
   scheduleContent: {
     marginTop: 8,
@@ -182,29 +191,29 @@ const styles = StyleSheet.create({
   },
   eventScore: {
     flex: 2,
-    backgroundColor: '#333',
+    backgroundColor: "#333",
     borderRadius: 8,
     padding: 16,
   },
   scoreHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   scoreValue: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    backgroundColor: '#555',
+    backgroundColor: "#555",
     marginVertical: 8,
   },
   scoreItem: {
@@ -213,7 +222,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   todoList: {
-    backgroundColor: '#333',
+    backgroundColor: "#333",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 24,
@@ -229,26 +238,26 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     padding: 24,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   closeButton: {
     marginTop: 16,
-    backgroundColor: '#333',
+    backgroundColor: "#333",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 4,
   },
   closeButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   userRank: {
     ...Typography.subheader,
