@@ -46,27 +46,39 @@ function Header() {
   // If the route includes "login", don't show the header.
   if (segments.includes('login')) return null;
 
+  // Get current route
+  const currentRoute = segments[segments.length - 1] || 'dashboard';
+
   // Force dark styling for the header.
-  const headerColors = Colors.dark; // Ensure Colors.dark is defined, e.g., { headerBackground: '#000', text: '#fff', ... }
+  const headerColors = Colors.dark;
+
+  const IconButton = ({ route, iconName }: { route: string; iconName: keyof typeof Ionicons.glyphMap }) => (
+    <TouchableOpacity 
+      onPress={() => route !== currentRoute && router.replace(`/${route}`)}
+      disabled={route === currentRoute}
+      style={[
+        styles.iconButton,
+        route === currentRoute && styles.iconButtonActive
+      ]}
+    >
+      <Ionicons 
+        name={iconName} 
+        size={24} 
+        color={route === currentRoute ? headerColors.tint : headerColors.text} 
+      />
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={[styles.headerSafeArea, { backgroundColor: 'black' }]}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity onPress={() => router.replace('/scanpage')}>
-          <Ionicons name="scan-outline" size={24} color={headerColors.text} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.replace('/dashboard')}>
-          <Ionicons name="grid-outline" size={24} color={headerColors.text} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.replace('/victordle')}>
-          <Ionicons name="game-controller-outline" size={24} color={headerColors.text} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={async () => {
-            await signOut();
-            router.replace('/login');
-          }}>
+        <IconButton route="scanpage" iconName="scan-outline" />
+        <IconButton route="dashboard" iconName="grid-outline" />
+        <IconButton route="victordle" iconName="game-controller-outline" />
+        <TouchableOpacity onPress={async () => {
+          await signOut();
+          router.replace('/login');
+        }}>
           <Ionicons name="log-out-outline" size={24} color={headerColors.text} />
         </TouchableOpacity>
       </View>
@@ -145,4 +157,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  iconButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  iconButtonActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  }
 });
