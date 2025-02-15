@@ -1,61 +1,37 @@
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable } from 'react-native';
-import { useAuth } from '@clerk/clerk-expo';
-import { useUser } from '@clerk/clerk-expo';
+import React from 'react';
+import { Stack } from 'expo-router';
 
-export const LogoutButton = () => {
-	const { signOut } = useAuth();
-
-	const doLogout = () => {
-		signOut();
-	};
-
+const PublicLayout = () => {
 	return (
-		<Pressable onPress={doLogout} style={{ marginRight: 10 }}>
-			<Ionicons name="log-out-outline" size={24} color={'#fff'} />
-		</Pressable>
-	);
-};
-
-const TabsPage = () => {
-	const { isSignedIn } = useAuth();
-
-	return (
-		<Tabs
+		<Stack
 			screenOptions={{
 				headerStyle: {
 					backgroundColor: '#6c47ff'
 				},
-				headerTintColor: '#fff'
+				headerTintColor: '#fff',
+				headerBackTitle: 'Back'
 			}}
 		>
-			<Tabs.Screen
-				name="home"
+			<Stack.Screen
+				name="login"
 				options={{
-					headerTitle: 'Home',
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="home-outline" size={size} color={color} />
-					),
-					tabBarLabel: 'Home',
-                    headerRight: () => <LogoutButton />
+					headerTitle: 'Clerk Auth App'
 				}}
-				redirect={!isSignedIn}
-			/>
-			{/* <Tabs.Screen
-				name="profile"
+			></Stack.Screen>
+			<Stack.Screen
+				name="register"
 				options={{
-					headerTitle: 'My Profile',
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="person-outline" size={size} color={color} />
-					),
-					tabBarLabel: 'My Profile',
-					headerRight: () => <LogoutButton />
+					headerTitle: 'Create Account'
 				}}
-				redirect={!isSignedIn}
-			/> */}
-		</Tabs>
+			></Stack.Screen>
+			<Stack.Screen
+				name="reset"
+				options={{
+					headerTitle: 'Reset Password'
+				}}
+			></Stack.Screen>
+		</Stack>
 	);
 };
 
-export default TabsPage;
+export default PublicLayout;

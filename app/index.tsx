@@ -1,7 +1,20 @@
-import { Redirect } from 'expo-router';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@clerk/clerk-expo';
 
-const StartPage = () => {
-	return <Redirect href="./(auth)/login" />;
-};
+export default function Index() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const router = useRouter();
 
-export default StartPage;
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (isSignedIn) {
+      router.replace('/explore');
+    } else {
+      router.replace('/login');
+    }
+  }, [isLoaded, isSignedIn, router]);
+
+  return null;
+}
