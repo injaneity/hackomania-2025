@@ -119,7 +119,7 @@ const Victordle = () => {
 
   return (
     <View style={styles.container}>
-      <Text>Session ID: {sessionID}</Text>
+      <Text style={styles.headerText}>Session ID: {sessionID}</Text>
       <View style={styles.playerInfo}>
         <Text style={[styles.player, currentPlayer === 0 && styles.activePlayer]}>
           {players[0].username} ({players[0].score})
@@ -188,6 +188,7 @@ const styles = StyleSheet.create({
   player: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#fff', 
   },
   activePlayer: {
     color: 'blue', 
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
   timer: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'black',
+    color: '#fff',
   },
   grid: {
     alignSelf: 'center',
@@ -268,7 +269,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
-  }
+  },
+  headerText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+    },
 });
 
 export default Victordle;
