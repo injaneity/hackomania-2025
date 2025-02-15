@@ -7,17 +7,14 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import QRCode from 'react-native-qrcode-svg';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   Modal,
   ScrollView,
 } from "react-native";
-import ProximityMeter from "@/components/ProximityMeter";
+// import ProximityMeter from "@/components/ProximityMeter";
 
 export default function Dashboard() {
-  // Replace with actual email or unique identifier for the QR code
-  const userEmail = "minn@example.com";
   const [qrVisible, setQrVisible] = useState(false);
 
   const { currentUserId, username } = useCurrentUser();
@@ -51,7 +48,7 @@ export default function Dashboard() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <QRCode
-              value={userEmail}
+              value={username}
               size={200}
               backgroundColor="transparent"
               color="black"
@@ -130,8 +127,9 @@ export default function Dashboard() {
       </View>
 
       <View>
-        <Text style={styles.sectionTitle}>Proximity Tracker</Text>
-        <ProximityMeter /> {/* Proximity Meter integrated here */}
+        {/* <Text style={styles.sectionTitle}>Proximity Tracker</Text> */}
+        {/* <ProximityMeter />  */}
+        {/* Proximity Meter integrated here */}
       </View>
     </ScrollView>
   );
