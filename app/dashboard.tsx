@@ -12,6 +12,7 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
+
 // import ProximityMeter from "@/components/ProximityMeter";
 
 export default function Dashboard() {
@@ -65,7 +66,7 @@ export default function Dashboard() {
 
       <View style={styles.header}>
         <View>
-          <Text style={[Typography.header, { color: 'white' }]}>Minn @minn</Text>
+          <Text style={[Typography.header, { color: 'white' }]}>{username}</Text>
           <Text style={[Typography.subheader, { color: '#aaa' }]}>Leetcode Therapy</Text>
         </View>
         <View style={styles.qrContainer}>
