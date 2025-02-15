@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.7.7",
+    "@expo-google-fonts/caveat-brush": "^0.2.3",
     "@expo-google-fonts/frank-ruhl-libre": "^0.2.3",
     "@expo/vector-icons": "^14.0.4",
     "@gorhom/bottom-sheet": "^5.1.1",

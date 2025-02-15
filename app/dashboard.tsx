@@ -1,4 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { Typography } from '@/constants/Typography';
+import { Text } from '@/components/ui/StyledText';
+import { leaderboardManager, PlayerScore } from '@/utils/leaderboardManager';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import QRCode from 'react-native-qrcode-svg';
 import {
   View,
   Text,
@@ -7,14 +13,31 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import QRCode from "react-native-qrcode-svg";
 import ProximityMeter from "@/components/ProximityMeter";
 
 export default function Dashboard() {
   // Replace with actual email or unique identifier for the QR code
   const userEmail = "minn@example.com";
   const [qrVisible, setQrVisible] = useState(false);
+
+  const { currentUserId, username } = useCurrentUser();
+  const [leaderboard, setLeaderboard] = useState<PlayerScore[]>([]);
+  const [userRank, setUserRank] = useState<number | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = leaderboardManager.subscribeToLeaderboard((players) => {
+      setLeaderboard(players);
+      if (currentUserId) {
+        const rank = players.findIndex(p => p.id === currentUserId) + 1;
+        setUserRank(rank > 0 ? rank : null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [currentUserId]);
+
+  // Format score with commas
+  const formatScore = (score: number) => score.toLocaleString();
 
   return (
     <ScrollView style={styles.container}>
@@ -45,8 +68,8 @@ export default function Dashboard() {
 
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Minn @minn</Text>
-          <Text style={styles.headerSubtitle}>Leetcode Therapy</Text>
+          <Text style={[Typography.header, { color: 'white' }]}>Minn @minn</Text>
+          <Text style={[Typography.subheader, { color: '#aaa' }]}>Leetcode Therapy</Text>
         </View>
         <View style={styles.qrContainer}>
           <TouchableOpacity onPress={() => setQrVisible(true)}>
@@ -71,14 +94,29 @@ export default function Dashboard() {
 
         <View style={styles.eventScore}>
           <View style={styles.scoreHeader}>
-            <Text style={styles.sectionTitle}>Event Score:</Text>
-            <Text style={styles.scoreValue}>99999</Text>
+            <Text style={styles.sectionTitle}>Leaderboard</Text>
           </View>
           <View style={styles.divider} />
-          <View>
-            <Text style={styles.scoreItem}>1. setlin - 1234</Text>
-            <Text style={styles.scoreItem}>2. weisin - 4567</Text>
-            <Text style={styles.scoreItem}>3. gongahkia - 7890</Text>
+          <View style={styles.leaderboardContainer}>
+            <View style={styles.leaderboardList}>
+              {leaderboard.map((player, index) => (
+                <Text 
+                  key={player.id} 
+                  style={[
+                    styles.scoreItem,
+                    player.id === currentUserId && styles.currentUserScore
+                  ]}
+                >
+                  {index + 1}. {player.username} - {formatScore(player.score)}
+                </Text>
+              ))}
+            </View>
+            {userRank && (
+              <View style={styles.userRankContainer}>
+                <View style={styles.rankDivider} />
+                <Text style={styles.userRank}>Your Rank: #{userRank}</Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -147,8 +185,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   scheduleItem: {
-    fontSize: 14,
-    color: "white",
+    ...Typography.body,
+    color: 'white',
     marginBottom: 4,
   },
   eventScore: {
@@ -179,8 +217,8 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   scoreItem: {
-    fontSize: 14,
-    color: "white",
+    fontSize: 18,
+    color: 'white',
     marginBottom: 4,
   },
   todoList: {
@@ -194,8 +232,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   todoItem: {
-    fontSize: 14,
-    color: "white",
+    fontSize: 18,
+    color: 'white',
     marginBottom: 4,
   },
   modalOverlay: {
@@ -220,5 +258,30 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "white",
     fontWeight: "bold",
+  },
+  userRank: {
+    ...Typography.subheader,
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  currentUserScore: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+  },
+  leaderboardContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  leaderboardList: {
+    flex: 1,
+  },
+  userRankContainer: {
+    marginTop: 10,
+  },
+  rankDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#555',
+    marginBottom: 10,
   },
 });

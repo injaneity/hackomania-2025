@@ -5,6 +5,7 @@ import { QueueManager } from '@/utils/queueManager';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { gameManager, GameState } from '@/utils/gameManager';
 import OnScreenKeyboard, { ENTER, BACKSPACE } from '@/components/ui/OnScreenKeyboard';
+import { Typography } from '@/constants/Typography';
 
 const Victordle = () => {
   const { currentUserId, username, isLoaded } = useCurrentUser();
@@ -149,10 +150,10 @@ const Victordle = () => {
   if (gameState === 'matchmaking') {
     return (
       <View style={styles.matchmakingContainer}>
-        <Text style={styles.matchmakingTitle}>Welcome to Victordle!</Text>
-        <Text style={styles.matchmakingSubtitle}>Challenge other players in real-time</Text>
+        <Text style={[styles.matchmakingTitle, Typography.header]}>Welcome to Victordle!</Text>
+        <Text style={[styles.matchmakingSubtitle, Typography.subheader]}>Challenge other players in real-time</Text>
         <TouchableOpacity style={styles.searchButton} onPress={handleSearchStart}>
-          <Text style={styles.searchButtonText}>Search for Match</Text>
+          <Text style={[styles.searchButtonText, Typography.body]}>Search for Match</Text>
         </TouchableOpacity>
       </View>
     );

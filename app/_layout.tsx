@@ -12,12 +12,14 @@ import {
   FrankRuhlLibre_500Medium,
   FrankRuhlLibre_900Black,
 } from '@expo-google-fonts/frank-ruhl-libre';
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { CaveatBrush_400Regular } from '@expo-google-fonts/caveat-brush'
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { tokenCache } from '@/utils/cache';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { StackAnimationOptions } from '@react-navigation/stack';
 import Header from '@/components/ui/Header';
 import Footer from '@/components/ui/Footer';
 
@@ -42,6 +44,7 @@ export default function RootLayout() {
     FrankRuhlLibre_800ExtraBold,
     FrankRuhlLibre_500Medium,
     FrankRuhlLibre_900Black,
+    CaveatBrush_400Regular,
   });
 
   useEffect(() => {
@@ -58,29 +61,49 @@ export default function RootLayout() {
     );
   }
 
+  const getAnimationConfig = (direction?: string): StackAnimationOptions => ({
+    animation: direction === 'right' ? 'slide_from_right' : 'slide_from_left',
+    gestureEnabled: false,  // Disable gesture navigation
+  });
+
   return (
     <SafeAreaProvider>
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ClerkLoaded>
-        <ThemeProvider value={theme}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheetModalProvider>
-              <View style={{ flex: 1 }}>
-                <Header />
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-                  <Stack.Screen name="victordle" options={{ headerShown: false }} />
-                  <Stack.Screen name="login" options={{ presentation: 'modal', headerShown: false }} />
-                  <Stack.Screen name="scan" options={{ presentation: 'fullScreenModal', headerShown: false }} />
-                </Stack>
-                <Footer />
-              </View>
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
-        </ThemeProvider>
-      </ClerkLoaded>
-    </ClerkProvider>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <ClerkLoaded>
+          <ThemeProvider value={theme}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <BottomSheetModalProvider>
+                <View style={{ flex: 1 }}>
+                  <Header />
+                  <Stack
+                    screenOptions={({ route }) => ({
+                      headerShown: false,
+                      ...getAnimationConfig(route.params?.direction),
+                    })}
+                  >
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="dashboard" />
+                    <Stack.Screen name="victordle" />
+                    <Stack.Screen 
+                      name="login" 
+                      options={{ 
+                        presentation: 'modal',
+                      }} 
+                    />
+                    <Stack.Screen 
+                      name="scan" 
+                      options={{
+                        presentation: 'fullScreenModal',
+                      }}
+                    />
+                  </Stack>
+                  <Footer/>
+                </View>
+              </BottomSheetModalProvider>
+            </GestureHandlerRootView>
+          </ThemeProvider>
+        </ClerkLoaded>
+      </ClerkProvider>
     </SafeAreaProvider>
   );
 }
@@ -103,4 +126,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  iconButton: {
+    padding: 8,
+    borderRadius: 8,
+  },
+  iconButtonActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  }
 });
