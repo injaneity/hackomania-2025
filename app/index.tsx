@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@clerk/clerk-expo';
 
@@ -8,13 +9,20 @@ export default function Index() {
 
   useEffect(() => {
     if (!isLoaded) return;
-
-    if (isSignedIn) {
-      router.replace('/explore');
-    } else {
-      router.replace('/login');
-    }
+    
+    // Defer navigation until after the current call stack is cleared
+    setTimeout(() => {
+      if (isSignedIn) {
+        router.replace('/victordle');
+      } else {
+        router.replace('/login');
+      }
+    }, 0);
   }, [isLoaded, isSignedIn, router]);
 
-  return null;
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" />
+    </View>
+  );
 }
