@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { playerManager } from '@/utils/playerManager';
 
 const WORDS = ['REACT', 'LOGIC', 'DEBUG', 'ALIAS', 'ARRAY', 'STACK', 'INDEX', 'TOKEN', 'CLASS', 'FRAME', 
                'CACHE', 'PROTO', 'INPUT', 'SHIFT', 'LOOPS', 'CODES', 'VIRUS', 'PATCH', 'FETCH', 'LINES', 
@@ -14,20 +15,28 @@ const Victordle = () => {
   const [currentRow, setCurrentRow] = useState(0);
   const [currentCol, setCurrentCol] = useState(0);
   const [currentPlayer, setCurrentPlayer] = useState(0);
-  const [players, setPlayers] = useState([
-    { id: 1, name: 'Savvy Lion', score: 0 },
-    { id: 2, name: 'Wise Fox', score: 0 },
-  ]);
+  const [players, setPlayers] = useState(playerManager.getPlayers());
   const [gameOver, setGameOver] = useState(false);
   const [timer, setTimer] = useState(30);
+  const [sessionID, setSessionID] = useState('');
 
   useEffect(() => {
+    if (players.length < 2) {
+      playerManager.addPlayer('1', 'Savvy Lion');
+      playerManager.addPlayer('2', 'Wise Fox');
+      setPlayers(playerManager.getPlayers());
+    }
     startNewGame();
+    setSessionID(generateSessionID());
     const interval = setInterval(() => {
       setTimer((prev) => (prev > 0 ? prev - 1 : handleTimeout()));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const generateSessionID = () => {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  };
 
   const startNewGame = () => {
     const randomWord = WORDS[Math.floor(Math.random() * WORDS.length)];
@@ -75,23 +84,20 @@ const Victordle = () => {
     setGrid(newGrid);
   };
 
-
-  // TODO
-  // we might want to change how scoring works, rn winners earn 10 and losers earn 1
   const checkGuess = () => {
     const guess = grid[currentRow].join('');
     if (guess === word) {
-      players[currentPlayer].score += 10; 
-      players[1 - currentPlayer].score += 1; 
-      setPlayers([...players]);
+      playerManager.updateScore(players[currentPlayer].id, 10);
+      playerManager.updateScore(players[1 - currentPlayer].id, 1);
+      setPlayers(playerManager.getPlayers());
       setGameOver(true);
       return;
     }
 
     if (currentRow === grid.length - 1) {
-      players[0].score += 1;
-      players[1].score += 1;
-      setPlayers([...players]);
+      playerManager.updateScore(players[0].id, 1);
+      playerManager.updateScore(players[1].id, 1);
+      setPlayers(playerManager.getPlayers());
       setGameOver(true);
       return;
     }
@@ -103,13 +109,14 @@ const Victordle = () => {
 
   return (
     <View style={styles.container}>
+      <Text>Session ID: {sessionID}</Text>
       <View style={styles.playerInfo}>
         <Text style={[styles.player, currentPlayer === 0 && styles.activePlayer]}>
-          🦁 {players[0].name} ({players[0].score})
+          🦁 {players[0].username} ({players[0].score})
         </Text>
         <Text style={styles.timer}>⏱ {timer}s</Text>
         <Text style={[styles.player, currentPlayer === 1 && styles.activePlayer]}>
-          🦊 {players[1].name} ({players[1].score})
+          🦊 {players[1].username} ({players[1].score})
         </Text>
       </View>
 
@@ -150,6 +157,12 @@ const Victordle = () => {
           <Text style={styles.keyText}>Enter</Text>
         </TouchableOpacity>
       </View>
+      
+      {gameOver && (
+        <TouchableOpacity style={styles.newGameButton} onPress={startNewGame}>
+          <Text style={styles.newGameButtonText}>New Game</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -233,6 +246,19 @@ const styles = StyleSheet.create({
     width: 60, 
     backgroundColor: '#a8a8a8', 
   },
+    newGameButton: {
+    backgroundColor: '#4CAF50',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 20,
+    alignSelf: 'center',
+  },
+  newGameButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  }
 });
 
 export default Victordle;
