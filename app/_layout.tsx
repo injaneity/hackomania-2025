@@ -19,6 +19,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { tokenCache } from '@/utils/cache';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Header from '@/components/ui/Header';
+import Footer from '@/components/ui/Footer';
 
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -71,8 +72,9 @@ export default function RootLayout() {
                   <Stack.Screen name="dashboard" options={{ headerShown: false }} />
                   <Stack.Screen name="victordle" options={{ headerShown: false }} />
                   <Stack.Screen name="login" options={{ presentation: 'modal', headerShown: false }} />
-                  <Stack.Screen name="scanpage" options={{ presentation: 'fullScreenModal', headerShown: false }} />
+                  <Stack.Screen name="scan" options={{ presentation: 'fullScreenModal', headerShown: false }} />
                 </Stack>
+                <Footer />
               </View>
             </BottomSheetModalProvider>
           </GestureHandlerRootView>

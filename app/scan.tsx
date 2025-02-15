@@ -1,18 +1,15 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, ToastAndroid } from 'react-native';
 import { router } from 'expo-router';
-import React from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function App() {
+export default function Scan() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
-  // Using a ref for immediate flag update
   const scannedRef = useRef(false);
 
   const handleBarCodeScanned = ({ type, data, bounds }: { type: string; data: string; bounds?: any }) => {
-    // Return early if a scan is already in progress
     if (scannedRef.current) return;
 
     scannedRef.current = true;
@@ -24,20 +21,17 @@ export default function App() {
       alert('QR Code Scanned!');
     }
 
-    // Delay navigation to prevent rapid-fire scans.
     setTimeout(() => {
-      scannedRef.current = false; // Reset the flag to allow scanning again if needed
-      router.replace('/explore');
+      scannedRef.current = false;
+      router.replace('/dashboard');
     }, 1500); // Adjust the delay as necessary
   };
 
   if (!permission) {
-    // Camera permissions are still loading.
     return <View />;
   }
 
   if (!permission.granted) {
-    // Camera permissions are not granted yet.
     return (
       <View style={styles.container}>
         <Text style={styles.message}>We need your permission to show the camera</Text>
