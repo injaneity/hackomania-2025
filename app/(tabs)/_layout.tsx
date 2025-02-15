@@ -6,6 +6,7 @@ import { HapticTab } from '@/components/HapticTab';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
 export default function TabLayout() {
@@ -41,9 +42,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="Shitordle"
+        name="victordle"
         options={{
-          title: 'Shitordle',
+          title: 'Victordle',
           tabBarIcon: ({ color }) => <Ionicons name="game-controller" size={28} color={color} />,
         }}
       />
