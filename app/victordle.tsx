@@ -1,85 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { playerManager } from '@/utils/playerManager';
+import { QueueManager } from '@/utils/queueManager';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { gameManager, GameState } from '@/utils/gameManager';
 
 const WORDS = ['REACT', 'LOGIC', 'DEBUG', 'ALIAS', 'ARRAY', 'STACK', 'INDEX', 'TOKEN', 'CLASS', 'FRAME', 
                'CACHE', 'PROTO', 'INPUT', 'SHIFT', 'LOOPS', 'CODES', 'VIRUS', 'PATCH', 'FETCH', 'LINES', 
                'QUERY', 'BLOCK', 'CLEAR', 'PARSE', 'SCOPE', 'ALERT', 'CHAIN', 'CLONE'];
 
-// this is hardcoded rn, when its good enough ill see if can query an api for words
-// ~gong
+const MatchmakingScreen = ({ onStartSearch }: { onStartSearch: () => void }) => {
+  return (
+    <View style={styles.matchmakingContainer}>
+      <Text style={styles.matchmakingTitle}>Welcome to Victordle!</Text>
+      <Text style={styles.matchmakingSubtitle}>Challenge other players in real-time</Text>
+      <TouchableOpacity style={styles.searchButton} onPress={onStartSearch}>
+        <Text style={styles.searchButtonText}>Search for Match</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const SearchingScreen = () => {
+  return (
+    <View style={styles.matchmakingContainer}>
+      <ActivityIndicator size="large" color="#0000ff" />
+      <Text style={styles.searchingText}>Searching for players...</Text>
+      <Text style={styles.searchingSubtext}>This may take a few moments</Text>
+    </View>
+  );
+};
 
 const Victordle = () => {
-  const [word, setWord] = useState('');
+  const { currentUserId, username, isLoaded } = useCurrentUser();
+  const [gameState, setGameState] = useState<'matchmaking' | 'searching' | 'playing'>('matchmaking');
+  const [queueManager, setQueueManager] = useState<QueueManager | null>(null);
+  const [currentGame, setCurrentGame] = useState<GameState | null>(null);
   const [grid, setGrid] = useState(Array(6).fill('').map(() => Array(5).fill('')));
   const [currentRow, setCurrentRow] = useState(0);
   const [currentCol, setCurrentCol] = useState(0);
-  const [currentPlayer, setCurrentPlayer] = useState(0);
-  const [players, setPlayers] = useState(playerManager.getPlayers());
-  const [gameOver, setGameOver] = useState(false);
   const [timer, setTimer] = useState(30);
-  const [sessionID, setSessionID] = useState('');
-
-  const initializePlayers = (player1: { id: string, username: string }, player2: { id: string, username: string }) => {
-    playerManager.addPlayer(player1.id, player1.username);
-    playerManager.addPlayer(player2.id, player2.username);
-    setPlayers(playerManager.getPlayers());
-  };
-
-  // TODO
-  // rn we just hardcoding the 2 players 
-  // will need to edit the logic below to handle dynamic loading of 2 logged on players
-  // ~gong
 
   useEffect(() => {
-    initializePlayers(
-      { id: '100', username: 'Set Lin v1' },
-      { id: '101', username: 'Set Lin v2' }
-    );
-    startNewGame();
-    setSessionID(generateSessionID());
-    const interval = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : handleTimeout()));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!isLoaded || !currentUserId) return;
+    
+    const initPlayer = async () => {
+      await playerManager.addPlayer(currentUserId, username);
+    };
 
-  const generateSessionID = () => {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    initPlayer();
+  }, [currentUserId, isLoaded, username]);
+
+  const handleMatchFound = (matchId: string) => {
+    gameManager.subscribeToGame(matchId, (game) => {
+      setCurrentGame(game);
+      setGameState('playing');
+      resetGameBoard();
+    });
   };
 
-  const startNewGame = () => {
-    const randomWord = WORDS[Math.floor(Math.random() * WORDS.length)];
-    setWord(randomWord);
+  const handleSearchStart = async () => {
+    if (!currentUserId) return;
+    
+    setGameState('searching');
+    try {
+      const manager = new QueueManager(currentUserId);
+      setQueueManager(manager);
+      await manager.joinQueue(handleMatchFound);
+    } catch (error) {
+      console.error('Queue error:', error);
+      setGameState('matchmaking');
+    }
+  };
+
+  const resetGameBoard = () => {
     setGrid(Array(6).fill('').map(() => Array(5).fill('')));
     setCurrentRow(0);
     setCurrentCol(0);
-    setGameOver(false);
     setTimer(30);
   };
 
-  const handleTimeout = () => {
-    if (!gameOver) {
-      switchPlayer();
-      return 30; 
-    }
-    return timer;
-  };
+  const handleKeyPress = async (key: string) => {
+    if (!currentGame || currentGame.currentTurn !== currentUserId) return;
 
-  const switchPlayer = () => {
-    setCurrentPlayer((prev) => (prev === 0 ? 1 : 0));
-    setTimer(30); 
-  };
-
-  const handleKeyPress = (key: string) => {
-    if (gameOver || currentRow >= grid.length) return;
     const newGrid = [...grid];
     if (key === 'ENTER') {
-      if (currentCol === grid[0].length) {
-        checkGuess();
+      if (currentCol === 5) {
+        const guess = newGrid[currentRow].join('');
+        await submitGuess(guess);
       }
       return;
-    } else if (key === 'BACKSPACE') {
+    }
+
+    if (key === 'BACKSPACE') {
       if (currentCol > 0) {
         newGrid[currentRow][currentCol - 1] = '';
         setCurrentCol(currentCol - 1);
@@ -87,91 +100,127 @@ const Victordle = () => {
       return;
     }
 
-    if (currentCol < grid[0].length) {
+    if (currentCol < 5) {
       newGrid[currentRow][currentCol] = key;
       setCurrentCol(currentCol + 1);
     }
     setGrid(newGrid);
   };
 
-  const checkGuess = () => {
-    const guess = grid[currentRow].join('');
-    if (guess === word) {
-      playerManager.updateScore(players[currentPlayer].id, 10);
-      playerManager.updateScore(players[1 - currentPlayer].id, 1);
-      setPlayers(playerManager.getPlayers());
-      setGameOver(true);
-      return;
+  const submitGuess = async (guess: string) => {
+    if (!currentGame) return;
+
+    const updates: Partial<GameState> = {
+      currentTurn: Object.keys(currentGame.players).find(id => id !== currentUserId)!,
+      lastMoveTimestamp: Date.now(),
+    };
+
+    // Update player's guesses
+    const playerGuesses = [...(currentGame.players[currentUserId].guesses || []), guess];
+    updates.players = {
+      ...currentGame.players,
+      [currentUserId]: {
+        ...currentGame.players[currentUserId],
+        guesses: playerGuesses,
+      },
+    };
+
+    if (guess === currentGame.word) {
+      updates.status = 'finished';
+      // Update scores
+      await playerManager.updateScore(currentUserId, 10);
+    } else if (currentRow === 5) {
+      updates.status = 'finished';
     }
 
-    if (currentRow === grid.length - 1) {
-      playerManager.updateScore(players[0].id, 1);
-      playerManager.updateScore(players[1].id, 1);
-      setPlayers(playerManager.getPlayers());
-      setGameOver(true);
-      return;
-    }
-
+    await gameManager.updateGameState(currentGame.id, updates);
     setCurrentRow(currentRow + 1);
     setCurrentCol(0);
-    switchPlayer();
   };
+
+  useEffect(() => {
+    return () => {
+      queueManager?.leaveQueue();
+    };
+  }, [queueManager]);
+
+  if (!isLoaded || !currentUserId) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (gameState === 'matchmaking') {
+    return <MatchmakingScreen onStartSearch={handleSearchStart} />;
+  }
+
+  if (gameState === 'searching') {
+    return <SearchingScreen />;
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerText}>Session ID: {sessionID}</Text>
-      <View style={styles.playerInfo}>
-        <Text style={[styles.player, currentPlayer === 0 && styles.activePlayer]}>
-          {players[0].username} ({players[0].score})
-        </Text>
-        <Text style={styles.timer}>⏱ {timer}s</Text>
-        <Text style={[styles.player, currentPlayer === 1 && styles.activePlayer]}>
-          {players[1].username} ({players[1].score})
-        </Text>
-      </View>
+      {currentGame && (
+        <>
+          <View style={styles.playerInfo}>
+            <Text style={[styles.player, currentGame.currentTurn === Object.keys(currentGame.players)[0] && styles.activePlayer]}>
+              {currentGame.players[Object.keys(currentGame.players)[0]].username}
+            </Text>
+            <Text style={styles.timer}>⏱ {timer}s</Text>
+            <Text style={[styles.player, currentGame.currentTurn === Object.keys(currentGame.players)[1] && styles.activePlayer]}>
+              {currentGame.players[Object.keys(currentGame.players)[1]].username}
+            </Text>
+          </View>
 
-      <View style={styles.grid}>
-        {grid.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.row}>
-            {row.map((letter, colIndex) => (
-              <View
-                key={colIndex}
-                style={[
-                  styles.cell,
-                  letter
-                    ? letter === word[colIndex]
-                      ? styles.correct
-                      : word.includes(letter)
-                      ? styles.misplaced
-                      : styles.incorrect
-                    : null,
-                ]}
-              >
-                <Text style={styles.cellText}>{letter}</Text>
+          <View style={styles.grid}>
+            {grid.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.row}>
+                {row.map((letter, colIndex) => (
+                  <View
+                    key={colIndex}
+                    style={[
+                      styles.cell,
+                      letter && currentGame.word[colIndex] === letter && styles.correct,
+                      letter && currentGame.word.includes(letter) && currentGame.word[colIndex] !== letter && styles.misplaced,
+                      letter && !currentGame.word.includes(letter) && styles.incorrect,
+                    ]}
+                  >
+                    <Text style={styles.cellText}>{letter}</Text>
+                  </View>
+                ))}
               </View>
             ))}
           </View>
-        ))}
-      </View>
 
-      <View style={styles.keyboard}>
-        {'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').map((key) => (
-          <TouchableOpacity key={key} onPress={() => handleKeyPress(key)} style={styles.key}>
-            <Text style={styles.keyText}>{key}</Text>
-          </TouchableOpacity>
-        ))}
-        <TouchableOpacity onPress={() => handleKeyPress('BACKSPACE')} style={[styles.key, styles.specialKey]}>
-          <Text style={styles.keyText}>⌫</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleKeyPress('ENTER')} style={[styles.key, styles.specialKey]}>
-          <Text style={styles.keyText}>Enter</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {gameOver && (
-        <TouchableOpacity style={styles.newGameButton} onPress={startNewGame}>
-          <Text style={styles.newGameButtonText}>New Game</Text>
-        </TouchableOpacity>
+          <View style={styles.keyboard}>
+            {'QWERTYUIOPASDFGHJKLZXCVBNM'.split('').map((key) => (
+              <TouchableOpacity 
+                key={key} 
+                onPress={() => handleKeyPress(key)}
+                disabled={currentGame.currentTurn !== currentUserId}
+                style={styles.key}
+              >
+                <Text style={styles.keyText}>{key}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity 
+              onPress={() => handleKeyPress('BACKSPACE')} 
+              disabled={currentGame.currentTurn !== currentUserId}
+              style={[styles.key, styles.specialKey]}
+            >
+              <Text style={styles.keyText}>⌫</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => handleKeyPress('ENTER')} 
+              disabled={currentGame.currentTurn !== currentUserId}
+              style={[styles.key, styles.specialKey]}
+            >
+              <Text style={styles.keyText}>Enter</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </View>
   );
@@ -179,7 +228,7 @@ const Victordle = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-    playerInfo: {
+  playerInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -257,7 +306,7 @@ const styles = StyleSheet.create({
     width: 60, 
     backgroundColor: '#a8a8a8', 
   },
-    newGameButton: {
+  newGameButton: {
     backgroundColor: '#4CAF50',
     padding: 10,
     borderRadius: 5,
@@ -270,12 +319,45 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  headerText: {
-    fontSize: 16,
+  matchmakingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  matchmakingTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
     marginBottom: 10,
-    },
+  },
+  matchmakingSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  searchButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    elevation: 3,
+  },
+  searchButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  searchingText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+  },
+  searchingSubtext: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 10,
+  },
 });
 
 export default Victordle;
