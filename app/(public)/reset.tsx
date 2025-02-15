@@ -10,7 +10,7 @@ const PwReset = () => {
 	const [successfulCreation, setSuccessfulCreation] = useState(false);
 	const { signIn, setActive } = useSignIn();
 
-	// Request a passowrd reset code by email
+	// Request a passrd reset code by email
 	const onRequestReset = async () => {
 		try {
 			await signIn!.create({
