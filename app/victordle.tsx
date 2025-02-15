@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { playerManager } from '@/utils/playerManager';
+import { QueueManager } from '@/utils/queueManager';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 const WORDS = ['REACT', 'LOGIC', 'DEBUG', 'ALIAS', 'ARRAY', 'STACK', 'INDEX', 'TOKEN', 'CLASS', 'FRAME', 
                'CACHE', 'PROTO', 'INPUT', 'SHIFT', 'LOOPS', 'CODES', 'VIRUS', 'PATCH', 'FETCH', 'LINES', 
@@ -29,16 +31,18 @@ const SearchingScreen = () => {
 };
 
 const Victordle = () => {
+  const { currentUserId, username, isLoaded } = useCurrentUser();
   const [word, setWord] = useState('');
   const [grid, setGrid] = useState(Array(6).fill('').map(() => Array(5).fill('')));
   const [currentRow, setCurrentRow] = useState(0);
   const [currentCol, setCurrentCol] = useState(0);
   const [currentPlayer, setCurrentPlayer] = useState(0);
-  const [players, setPlayers] = useState(playerManager.getPlayers());
+  // const [players, setPlayers] = useState(playerManager.getPlayers());
   const [gameOver, setGameOver] = useState(false);
   const [timer, setTimer] = useState(30);
-  const [sessionID, setSessionID] = useState('');
+  const [sessionID, xzsetSessionID] = useState('');
   const [gameState, setGameState] = useState<'matchmaking' | 'searching' | 'playing'>('matchmaking');
+  const [queueManager, setQueueManager] = useState<QueueManager | null>(null);
 
   const initializePlayers = (player1: { id: string, username: string }, player2: { id: string, username: string }) => {
     playerManager.addPlayer(player1.id, player1.username);
@@ -47,17 +51,20 @@ const Victordle = () => {
   };
 
   useEffect(() => {
-    initializePlayers(
-      { id: '100', username: 'Set Lin v1' },
-      { id: '101', username: 'Set Lin v2' }
-    );
-    startNewGame();
-    setSessionID(generateSessionID());
-    const interval = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : handleTimeout()));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!isLoaded || !currentUserId) return;
+
+    const initGame = async () => {
+      try {
+        await playerManager.addPlayer(currentUserId, username);
+        startNewGame();
+        setSessionID(generateSessionID());
+      } catch (error) {
+        console.error('Error initializing game:', error);
+      }
+    };
+
+    initGame();
+  }, [currentUserId, isLoaded]);
 
   const generateSessionID = () => {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -132,13 +139,34 @@ const Victordle = () => {
     switchPlayer();
   };
 
-  const handleSearchStart = () => {
+  const handleSearchStart = async () => {
+    if (!currentUserId) return;
+    
     setGameState('searching');
-    // Simulate finding a match after 3 seconds
-    setTimeout(() => {
-      setGameState('playing');
-    }, 3000);
+    try {
+      const manager = new QueueManager(currentUserId);
+      setQueueManager(manager);
+      await manager.joinQueue();
+    } catch (error) {
+      console.error('Queue error:', error);
+      setGameState('matchmaking');
+    }
   };
+
+  useEffect(() => {
+    return () => {
+      // Cleanup when component unmounts
+      queueManager?.leaveQueue();
+    };
+  }, [queueManager]);
+
+  if (!isLoaded || !currentUserId) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   if (gameState === 'matchmaking') {
     return <MatchmakingScreen onStartSearch={handleSearchStart} />;
