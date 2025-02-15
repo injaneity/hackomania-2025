@@ -22,8 +22,8 @@ const Victordle = () => {
 
   useEffect(() => {
     if (players.length < 2) {
-      playerManager.addPlayer('1', 'Savvy Lion');
-      playerManager.addPlayer('2', 'Wise Fox');
+      playerManager.addPlayer('1', 'Set Lin v1');
+      playerManager.addPlayer('2', 'Set Lin v2');
       setPlayers(playerManager.getPlayers());
     }
     startNewGame();
@@ -112,11 +112,11 @@ const Victordle = () => {
       <Text>Session ID: {sessionID}</Text>
       <View style={styles.playerInfo}>
         <Text style={[styles.player, currentPlayer === 0 && styles.activePlayer]}>
-          🦁 {players[0].username} ({players[0].score})
+          {players[0].username} ({players[0].score})
         </Text>
         <Text style={styles.timer}>⏱ {timer}s</Text>
         <Text style={[styles.player, currentPlayer === 1 && styles.activePlayer]}>
-          🦊 {players[1].username} ({players[1].score})
+          {players[1].username} ({players[1].score})
         </Text>
       </View>
 
