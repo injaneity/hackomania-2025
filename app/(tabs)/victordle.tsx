@@ -33,8 +33,8 @@ const Victordle = () => {
 
   useEffect(() => {
     initializePlayers(
-      { id: '100', username: 'Player 1' },
-      { id: '101', username: 'Player 2' }
+      { id: '100', username: 'Set Lin v1' },
+      { id: '101', username: 'Set Lin v2' }
     );
     startNewGame();
     setSessionID(generateSessionID());
