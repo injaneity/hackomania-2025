@@ -106,4 +106,57 @@ const Victordle = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  attemptRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  letter: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2,
+  },
+  letterText: {
+    fontSize: 20,
+    color: 'white',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    marginTop: 20,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: 'gray',
+    padding: 10,
+    width: 150,
+    marginRight: 10,
+  },
+  button: {
+    backgroundColor: 'blue',
+    padding: 10,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  gameOverText: {
+    fontSize: 18,
+    marginBottom: 20,
+  },
+});
+
 export default Victordle;
