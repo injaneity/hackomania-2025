@@ -1,13 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { playerManager } from '@/utils/playerManager';
 
 const WORDS = ['REACT', 'LOGIC', 'DEBUG', 'ALIAS', 'ARRAY', 'STACK', 'INDEX', 'TOKEN', 'CLASS', 'FRAME', 
                'CACHE', 'PROTO', 'INPUT', 'SHIFT', 'LOOPS', 'CODES', 'VIRUS', 'PATCH', 'FETCH', 'LINES', 
                'QUERY', 'BLOCK', 'CLEAR', 'PARSE', 'SCOPE', 'ALERT', 'CHAIN', 'CLONE'];
 
-// this is hardcoded rn, when its good enough ill see if can query an api for words
-// ~gong
+const MatchmakingScreen = ({ onStartSearch }: { onStartSearch: () => void }) => {
+  return (
+    <View style={styles.matchmakingContainer}>
+      <Text style={styles.matchmakingTitle}>Welcome to Victordle!</Text>
+      <Text style={styles.matchmakingSubtitle}>Challenge other players in real-time</Text>
+      <TouchableOpacity style={styles.searchButton} onPress={onStartSearch}>
+        <Text style={styles.searchButtonText}>Search for Match</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const SearchingScreen = () => {
+  return (
+    <View style={styles.matchmakingContainer}>
+      <ActivityIndicator size="large" color="#0000ff" />
+      <Text style={styles.searchingText}>Searching for players...</Text>
+      <Text style={styles.searchingSubtext}>This may take a few moments</Text>
+    </View>
+  );
+};
 
 const Victordle = () => {
   const [word, setWord] = useState('');
@@ -19,17 +38,13 @@ const Victordle = () => {
   const [gameOver, setGameOver] = useState(false);
   const [timer, setTimer] = useState(30);
   const [sessionID, setSessionID] = useState('');
+  const [gameState, setGameState] = useState<'matchmaking' | 'searching' | 'playing'>('matchmaking');
 
   const initializePlayers = (player1: { id: string, username: string }, player2: { id: string, username: string }) => {
     playerManager.addPlayer(player1.id, player1.username);
     playerManager.addPlayer(player2.id, player2.username);
     setPlayers(playerManager.getPlayers());
   };
-
-  // TODO
-  // rn we just hardcoding the 2 players 
-  // will need to edit the logic below to handle dynamic loading of 2 logged on players
-  // ~gong
 
   useEffect(() => {
     initializePlayers(
@@ -117,6 +132,22 @@ const Victordle = () => {
     switchPlayer();
   };
 
+  const handleSearchStart = () => {
+    setGameState('searching');
+    // Simulate finding a match after 3 seconds
+    setTimeout(() => {
+      setGameState('playing');
+    }, 3000);
+  };
+
+  if (gameState === 'matchmaking') {
+    return <MatchmakingScreen onStartSearch={handleSearchStart} />;
+  }
+
+  if (gameState === 'searching') {
+    return <SearchingScreen />;
+  }
+
   return (
     <View style={styles.container}>
       <Text>Session ID: {sessionID}</Text>
@@ -179,7 +210,7 @@ const Victordle = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-    playerInfo: {
+  playerInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -256,7 +287,7 @@ const styles = StyleSheet.create({
     width: 60, 
     backgroundColor: '#a8a8a8', 
   },
-    newGameButton: {
+  newGameButton: {
     backgroundColor: '#4CAF50',
     padding: 10,
     borderRadius: 5,
@@ -268,7 +299,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
-  }
+  },
+  matchmakingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  matchmakingTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  matchmakingSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  searchButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    elevation: 3,
+  },
+  searchButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  searchingText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+  },
+  searchingSubtext: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 10,
+  },
 });
 
 export default Victordle;
