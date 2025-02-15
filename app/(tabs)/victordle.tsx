@@ -20,10 +20,15 @@ const Victordle = () => {
   const [timer, setTimer] = useState(30);
   const [sessionID, setSessionID] = useState('');
 
+  // TODO
+  // rn we just hardcoding the 2 players 
+  // will need to edit the logic below to handle dynamic loading of 2 logged on players
+  // ~gong
+
   useEffect(() => {
-    if (players.length < 2) {
-      playerManager.addPlayer('1', 'Set Lin v1');
-      playerManager.addPlayer('2', 'Set Lin v2');
+    if (players.length < 2) { 
+      playerManager.addPlayer('100', 'Set Lin v1');
+      playerManager.addPlayer('101', 'Set Lin v2');
       setPlayers(playerManager.getPlayers());
     }
     startNewGame();
