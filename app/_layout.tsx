@@ -22,6 +22,8 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { tokenCache } from '@/utils/cache';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -48,12 +50,14 @@ function Header() {
   const headerColors = Colors.dark; // Ensure Colors.dark is defined, e.g., { headerBackground: '#000', text: '#fff', ... }
 
   return (
-    <SafeAreaView style={[styles.headerSafeArea, { backgroundColor: headerColors.headerBackground }]}>
+    <SafeAreaView style={[styles.headerSafeArea, { backgroundColor: 'black' }]}>
       <View style={styles.headerContainer}>
         <TouchableOpacity onPress={() => router.replace('/scanpage')}>
           <Ionicons name="scan-outline" size={24} color={headerColors.text} />
         </TouchableOpacity>
-
+        <TouchableOpacity onPress={() => router.replace('/dashboard')}>
+          <Ionicons name="grid-outline" size={24} color={headerColors.text} />
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => router.replace('/victordle')}>
           <Ionicons name="game-controller-outline" size={24} color={headerColors.text} />
         </TouchableOpacity>
@@ -96,6 +100,7 @@ export default function RootLayout() {
   }
 
   return (
+    <SafeAreaProvider>
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <ClerkLoaded>
         <ThemeProvider value={theme}>
@@ -107,6 +112,7 @@ export default function RootLayout() {
                 {/* Child screens rendered via Stack */}
                 <Stack>
                   <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="dashboard" options={{ headerShown: false }} />
                   <Stack.Screen name="victordle" options={{ headerShown: false }} />
                   <Stack.Screen name="login" options={{ presentation: 'modal', headerShown: false }} />
                   <Stack.Screen name="scanpage" options={{ presentation: 'fullScreenModal', headerShown: false }} />
@@ -117,20 +123,22 @@ export default function RootLayout() {
         </ThemeProvider>
       </ClerkLoaded>
     </ClerkProvider>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   headerSafeArea: {
     width: '100%',
+    
   },
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    paddingBottom: 24, // extra padding to ensure it's not blocked by system UI
+    paddingBottom: 0,
   },
   loadingContainer: {
     flex: 1,

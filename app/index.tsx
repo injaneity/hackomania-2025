@@ -13,7 +13,7 @@ export default function Index() {
     // Defer navigation until after the current call stack is cleared
     setTimeout(() => {
       if (isSignedIn) {
-        router.replace('/victordle');
+        router.replace('/dashboard');
       } else {
         router.replace('/login');
       }

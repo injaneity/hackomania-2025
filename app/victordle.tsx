@@ -237,6 +237,7 @@ const styles = StyleSheet.create({
   player: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#fff', 
   },
   activePlayer: {
     color: 'blue', 
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
   timer: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'black',
+    color: '#fff',
   },
   grid: {
     alignSelf: 'center',

@@ -5,6 +5,9 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useState } from 'react';
 import { defaultStyles } from '@/constants/Styles';
+import React from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 enum Strategy {
   Google = 'oauth_google',
@@ -32,7 +35,7 @@ const Page = () => {
 
       if (createdSessionId) {
         setActive!({ session: createdSessionId });
-        router.replace('/victordle');
+        router.replace('/dashboard');
       }
     } catch (err) {
       console.error('OAuth error', err);
@@ -40,58 +43,64 @@ const Page = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Log in or create an account</Text>
-      <Text style={styles.subText}>
-        By continuing, you agree to the Terms of Sale, Terms of Service, and Privacy Policy.
-      </Text>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
+        <Text style={styles.header}>Log in or create an account</Text>
+        <Text style={styles.subText}>
+          By continuing, you agree to the Terms of Sale, Terms of Service, and Privacy Policy.
+        </Text>
 
-      <Text style={styles.inputLabel}>Email address</Text>
-      <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
+        <Text style={styles.inputLabel}>Email address</Text>
+        <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} />
 
-      <TouchableOpacity style={defaultStyles.btn}>
-        <Text style={defaultStyles.btnText}>Continue with email</Text>
-      </TouchableOpacity>
-
-      <View style={styles.seperatorView}>
-        <View
-          style={{
-            flex: 1,
-            borderBottomColor: 'black',
-            borderBottomWidth: StyleSheet.hairlineWidth,
-          }}
-        />
-        <Text style={styles.seperator}>OR</Text>
-        <View
-          style={{
-            flex: 1,
-            borderBottomColor: 'black',
-            borderBottomWidth: StyleSheet.hairlineWidth,
-          }}
-        />
-      </View>
-
-      <View style={{ gap: 20 }}>
-        <TouchableOpacity style={styles.btnOutline} onPress={() => onSelectAuth(Strategy.Google)}>
-          <Ionicons name="logo-google" size={24} style={styles.btnIcon} />
-          <Text style={styles.btnOutlineText}>Continue with Google</Text>
+        <TouchableOpacity style={defaultStyles.btn}>
+          <Text style={defaultStyles.btnText}>Continue with email</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.btnOutline} onPress={() => onSelectAuth(Strategy.Facebook)}>
-          <Ionicons name="logo-facebook" size={24} style={styles.btnIcon} />
-          <Text style={styles.btnOutlineText}>Continue with Facebook</Text>
-        </TouchableOpacity>
+        <View style={styles.seperatorView}>
+          <View
+            style={{
+              flex: 1,
+              borderBottomColor: 'black',
+              borderBottomWidth: StyleSheet.hairlineWidth,
+            }}
+          />
+          <Text style={styles.seperator}>OR</Text>
+          <View
+            style={{
+              flex: 1,
+              borderBottomColor: 'black',
+              borderBottomWidth: StyleSheet.hairlineWidth,
+            }}
+          />
+        </View>
 
-        <TouchableOpacity style={styles.btnOutline} onPress={() => onSelectAuth(Strategy.Apple)}>
-          <Ionicons name="logo-apple" size={24} style={styles.btnIcon} />
-          <Text style={styles.btnOutlineText}>Continue with Apple</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+        <View style={{ gap: 20 }}>
+          <TouchableOpacity style={styles.btnOutline} onPress={() => onSelectAuth(Strategy.Google)}>
+            <Ionicons name="logo-google" size={24} style={styles.btnIcon} />
+            <Text style={styles.btnOutlineText}>Continue with Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.btnOutline} onPress={() => onSelectAuth(Strategy.Facebook)}>
+            <Ionicons name="logo-facebook" size={24} style={styles.btnIcon} />
+            <Text style={styles.btnOutlineText}>Continue with Facebook</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.btnOutline} onPress={() => onSelectAuth(Strategy.Apple)}>
+            <Ionicons name="logo-apple" size={24} style={styles.btnIcon} />
+            <Text style={styles.btnOutlineText}>Continue with Apple</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 export default Page;
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   container: {
     backgroundColor: '#fff',
     flex: 1,
