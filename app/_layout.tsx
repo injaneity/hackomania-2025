@@ -24,7 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { tokenCache } from '@/utils/cache';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-
+import { StackAnimationOptions } from '@react-navigation/stack';
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -53,9 +53,26 @@ function Header() {
   // Force dark styling for the header.
   const headerColors = Colors.dark;
 
+  // Add route order for transition direction calculation
+  const routeOrder = ['scanpage', 'dashboard', 'victordle'];
+
+  const getTransitionDirection = (targetRoute: string) => {
+    const currentIndex = routeOrder.indexOf(currentRoute);
+    const targetIndex = routeOrder.indexOf(targetRoute);
+    return targetIndex > currentIndex ? 'right' : 'left';
+  };
+
   const IconButton = ({ route, iconName }: { route: string; iconName: keyof typeof Ionicons.glyphMap }) => (
     <TouchableOpacity 
-      onPress={() => route !== currentRoute && router.replace(`/${route}`)}
+      onPress={() => {
+        if (route !== currentRoute) {
+          const direction = getTransitionDirection(route);
+          router.replace({
+            pathname: `/${route}`,
+            params: { direction }
+          });
+        }
+      }}
       disabled={route === currentRoute}
       style={[
         styles.iconButton,
@@ -113,30 +130,48 @@ export default function RootLayout() {
     );
   }
 
+  const getAnimationConfig = (direction?: string): StackAnimationOptions => ({
+    animation: direction === 'right' ? 'slide_from_right' : 'slide_from_left',
+    gestureEnabled: false,  // Disable gesture navigation
+  });
+
   return (
     <SafeAreaProvider>
-    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <ClerkLoaded>
-        <ThemeProvider value={theme}>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <BottomSheetModalProvider>
-              <View style={{ flex: 1 }}>
-                {/* Custom header appears here */}
-                <Header />
-                {/* Child screens rendered via Stack */}
-                <Stack>
-                  <Stack.Screen name="index" options={{ headerShown: false }} />
-                  <Stack.Screen name="dashboard" options={{ headerShown: false }} />
-                  <Stack.Screen name="victordle" options={{ headerShown: false }} />
-                  <Stack.Screen name="login" options={{ presentation: 'modal', headerShown: false }} />
-                  <Stack.Screen name="scanpage" options={{ presentation: 'fullScreenModal', headerShown: false }} />
-                </Stack>
-              </View>
-            </BottomSheetModalProvider>
-          </GestureHandlerRootView>
-        </ThemeProvider>
-      </ClerkLoaded>
-    </ClerkProvider>
+      <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+        <ClerkLoaded>
+          <ThemeProvider value={theme}>
+            <GestureHandlerRootView style={{ flex: 1 }}>
+              <BottomSheetModalProvider>
+                <View style={{ flex: 1 }}>
+                  <Header />
+                  <Stack
+                    screenOptions={({ route }) => ({
+                      headerShown: false,
+                      ...getAnimationConfig(route.params?.direction),
+                    })}
+                  >
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="dashboard" />
+                    <Stack.Screen name="victordle" />
+                    <Stack.Screen 
+                      name="login" 
+                      options={{ 
+                        presentation: 'modal',
+                      }} 
+                    />
+                    <Stack.Screen 
+                      name="scanpage" 
+                      options={{
+                        presentation: 'fullScreenModal',
+                      }}
+                    />
+                  </Stack>
+                </View>
+              </BottomSheetModalProvider>
+            </GestureHandlerRootView>
+          </ThemeProvider>
+        </ClerkLoaded>
+      </ClerkProvider>
     </SafeAreaProvider>
   );
 }
