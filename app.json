@@ -34,7 +34,8 @@
         }
       ],
       "react-native-vision-camera",
-      "expo-barcode-scanner"
+      "expo-barcode-scanner",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
