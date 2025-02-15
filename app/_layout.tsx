@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
 import {
   View,
-  TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  useColorScheme,
 } from 'react-native';
-import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/clerk-expo';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
+import { Stack } from 'expo-router';
 import {
   useFonts,
   FrankRuhlLibre_800ExtraBold,
@@ -18,13 +16,13 @@ import { CaveatBrush_400Regular } from '@expo-google-fonts/caveat-brush'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/Colors';
 import { tokenCache } from '@/utils/cache';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StackAnimationOptions } from '@react-navigation/stack';
+import Header from '@/components/ui/Header';
+import Footer from '@/components/ui/Footer';
+
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -36,73 +34,6 @@ if (!publishableKey) {
 
 // Prevent the splash screen from auto-hiding while fonts load
 SplashScreen.preventAutoHideAsync();
-
-// Custom header that only appears on routes other than login.
-// It forces dark styling by using Colors.dark.
-function Header() {
-  const router = useRouter();
-  const { signOut } = useAuth();
-  const segments = useSegments();
-
-  // If the route includes "login", don't show the header.
-  if (segments.includes('login')) return null;
-
-  // Get current route
-  const currentRoute = segments[segments.length - 1] || 'dashboard';
-
-  // Force dark styling for the header.
-  const headerColors = Colors.dark;
-
-  // Add route order for transition direction calculation
-  const routeOrder = ['scanpage', 'dashboard', 'victordle'];
-
-  const getTransitionDirection = (targetRoute: string) => {
-    const currentIndex = routeOrder.indexOf(currentRoute);
-    const targetIndex = routeOrder.indexOf(targetRoute);
-    return targetIndex > currentIndex ? 'right' : 'left';
-  };
-
-  const IconButton = ({ route, iconName }: { route: string; iconName: keyof typeof Ionicons.glyphMap }) => (
-    <TouchableOpacity 
-      onPress={() => {
-        if (route !== currentRoute) {
-          const direction = getTransitionDirection(route);
-          router.replace({
-            pathname: `/${route}`,
-            params: { direction }
-          });
-        }
-      }}
-      disabled={route === currentRoute}
-      style={[
-        styles.iconButton,
-        route === currentRoute && styles.iconButtonActive
-      ]}
-    >
-      <Ionicons 
-        name={iconName} 
-        size={24} 
-        color={route === currentRoute ? headerColors.tint : headerColors.text} 
-      />
-    </TouchableOpacity>
-  );
-
-  return (
-    <SafeAreaView style={[styles.headerSafeArea, { backgroundColor: 'black' }]}>
-      <View style={styles.headerContainer}>
-        <IconButton route="scanpage" iconName="scan-outline" />
-        <IconButton route="dashboard" iconName="grid-outline" />
-        <IconButton route="victordle" iconName="game-controller-outline" />
-        <TouchableOpacity onPress={async () => {
-          await signOut();
-          router.replace('/login');
-        }}>
-          <Ionicons name="log-out-outline" size={24} color={headerColors.text} />
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
 
 export default function RootLayout() {
   // Force dark theme for the layout (this can be adjusted as needed)
@@ -160,12 +91,13 @@ export default function RootLayout() {
                       }} 
                     />
                     <Stack.Screen 
-                      name="scanpage" 
+                      name="scan" 
                       options={{
                         presentation: 'fullScreenModal',
                       }}
                     />
                   </Stack>
+                  <Footer/>
                 </View>
               </BottomSheetModalProvider>
             </GestureHandlerRootView>
