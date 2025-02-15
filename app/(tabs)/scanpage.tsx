@@ -1,16 +1,19 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button, StyleSheet, Text, TouchableOpacity, View, Platform, ToastAndroid } from 'react-native';
 import { router } from 'expo-router';
 
 export default function App() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
-  const [scanned, setScanned] = useState(false);
+  // Using a ref for immediate flag update
+  const scannedRef = useRef(false);
 
   const handleBarCodeScanned = ({ type, data, bounds }: { type: string; data: string; bounds?: any }) => {
-    if (scanned) return;
-    setScanned(true);
+    // Return early if a scan is already in progress
+    if (scannedRef.current) return;
+
+    scannedRef.current = true;
     console.log(`Scanned barcode with type ${type} and data: ${data}`);
 
     if (Platform.OS === 'android') {
@@ -19,7 +22,11 @@ export default function App() {
       alert('QR Code Scanned!');
     }
 
-    router.replace('/explore');
+    // Delay navigation to prevent rapid-fire scans.
+    setTimeout(() => {
+      scannedRef.current = false; // Reset the flag to allow scanning again if needed
+      router.replace('/explore');
+    }, 1500); // Adjust the delay as necessary
   };
 
   if (!permission) {
