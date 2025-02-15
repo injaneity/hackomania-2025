@@ -1,14 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Typography } from '@/constants/Typography';
+import { Text } from '@/components/ui/StyledText';
 
 export default function Dashboard() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>Minn @minn</Text>
-          <Text style={styles.headerSubtitle}>Leetcode Therapy</Text>
+          <Text style={[Typography.header, { color: 'white' }]}>Minn @minn</Text>
+          <Text style={[Typography.subheader, { color: '#aaa' }]}>Leetcode Therapy</Text>
         </View>
         <View style={styles.qrContainer}>
           <TouchableOpacity>
@@ -69,15 +71,6 @@ const styles = StyleSheet.create({
       borderRadius: 8,
       marginBottom: 16,
     },
-    headerTitle: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: 'white',
-    },
-    headerSubtitle: {
-      fontSize: 14,
-      color: '#aaa',
-    },
     qrContainer: {
       alignItems: 'flex-end',
     },
@@ -102,7 +95,7 @@ const styles = StyleSheet.create({
       marginTop: 8,
     },
     scheduleItem: {
-      fontSize: 14,
+      ...Typography.body,
       color: 'white',
       marginBottom: 4,
     },
@@ -119,7 +112,7 @@ const styles = StyleSheet.create({
       marginBottom: 8,
     },
     sectionTitle: {
-      fontSize: 18,
+      fontSize: 22,
       fontWeight: 'bold',
       color: 'white',
     },
@@ -134,7 +127,7 @@ const styles = StyleSheet.create({
       marginVertical: 8,
     },
     scoreItem: {
-      fontSize: 14,
+      fontSize: 18,
       color: 'white',
       marginBottom: 4,
     },
@@ -149,7 +142,7 @@ const styles = StyleSheet.create({
       marginTop: 8,
     },
     todoItem: {
-      fontSize: 14,
+      fontSize: 18,
       color: 'white',
       marginBottom: 4,
     },

@@ -14,6 +14,7 @@ import {
   FrankRuhlLibre_500Medium,
   FrankRuhlLibre_900Black,
 } from '@expo-google-fonts/frank-ruhl-libre';
+import { CaveatBrush_400Regular } from '@expo-google-fonts/caveat-brush'
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -95,6 +96,7 @@ export default function RootLayout() {
     FrankRuhlLibre_800ExtraBold,
     FrankRuhlLibre_500Medium,
     FrankRuhlLibre_900Black,
+    CaveatBrush_400Regular,
   });
 
   useEffect(() => {
