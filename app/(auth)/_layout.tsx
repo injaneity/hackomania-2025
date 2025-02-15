@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
 import { useAuth } from '@clerk/clerk-expo';
+import { useUser } from '@clerk/clerk-expo';
 
 export const LogoutButton = () => {
 	const { signOut } = useAuth();
@@ -36,11 +37,12 @@ const TabsPage = () => {
 					tabBarIcon: ({ color, size }) => (
 						<Ionicons name="home-outline" size={size} color={color} />
 					),
-					tabBarLabel: 'Home'
+					tabBarLabel: 'Home',
+                    headerRight: () => <LogoutButton />
 				}}
 				redirect={!isSignedIn}
 			/>
-			<Tabs.Screen
+			{/* <Tabs.Screen
 				name="profile"
 				options={{
 					headerTitle: 'My Profile',
@@ -51,7 +53,7 @@ const TabsPage = () => {
 					headerRight: () => <LogoutButton />
 				}}
 				redirect={!isSignedIn}
-			/>
+			/> */}
 		</Tabs>
 	);
 };
