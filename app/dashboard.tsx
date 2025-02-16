@@ -31,8 +31,8 @@ const ArcProgress = ({
     <Svg width={size} height={size}>
       <Defs>
         <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="#1E88E5" stopOpacity="1" />
-          <Stop offset="1" stopColor="#F4A261" stopOpacity="1" />
+          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="1" />
+          <Stop offset="1" stopColor="#058789" stopOpacity="1" />
         </LinearGradient>
       </Defs>
       {/* Background circle */}
@@ -40,7 +40,6 @@ const ArcProgress = ({
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="#DAD2BA"
         strokeWidth={strokeWidth}
         fill="none"
       />
@@ -189,7 +188,7 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 16,
     marginTop: 10,
-    backgroundColor: "#C84C31", // Dark Orange / Rust
+    backgroundColor: "#992800", // Dark Orange / Rust
   },
   headerLeft: {
     flex: 2,
@@ -206,9 +205,7 @@ const styles = StyleSheet.create({
     paddingVertical: 50,
     marginBottom: 16,
     justifyContent: "space-between",
-    backgroundColor: "#D9A12D", // Golden Yellow
-    borderWidth: 1,
-    borderColor: "#D4973B", // Golden Yellow
+    backgroundColor: "#cd5e30", // Golden Yellow
   },
   arcContainer: {
     position: "relative",
@@ -226,7 +223,7 @@ const styles = StyleSheet.create({
   scoreText: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#1B4B43", // Dark Teal
+    color: "#ffffff", // Dark Teal
   },
   rankContainer: {
     flex: 1,
@@ -241,16 +238,14 @@ const styles = StyleSheet.create({
   rankText: {
     fontSize: 64,
     fontWeight: "bold",
-    color: "#9B2D16", // Deep Blue for better contrast
+    color: "#ffffff", // Deep Blue for better contrast
   },
   leaderboardSection: {
-    backgroundColor: "#2A9D8F", // Teal
+    backgroundColor: "#e3a72f", // Teal
     borderRadius: 15,
     padding: 16,
     paddingVertical: 25,
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: "#D4973B", // Golden Yellow
+    marginTop: 4,
   },
   sectionTitle: {
     fontSize: 18,
@@ -284,7 +279,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   currentUserRow: {
-    backgroundColor: "rgba(42, 157, 143, 0.1)", // Teal tint
+    backgroundColor: "rgba(0, 0, 0, 0.25)", // Teal tint
   },
   modalOverlay: {
     flex: 1,

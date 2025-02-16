@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { playerManager } from "@/utils/playerManager";
 import { QueueManager } from "@/utils/queueManager";
@@ -54,7 +55,6 @@ const Victordle = () => {
   const [grid, setGrid] = useState<string[][]>(
     Array.from({ length: 6 }, () => Array(5).fill(""))
   );
-
   const [currentRow, setCurrentRow] = useState<number>(0);
   const [currentCol, setCurrentCol] = useState<number>(0);
   const [timer, setTimer] = useState<number>(10);
@@ -64,6 +64,9 @@ const Victordle = () => {
   const [greenLetters, setGreenLetters] = useState<string[]>([]);
   const [yellowLetters, setYellowLetters] = useState<string[]>([]);
   const [grayLetters, setGrayLetters] = useState<string[]>([]);
+
+  // State for the floating help modal
+  const [helpVisible, setHelpVisible] = useState(false);
 
   useEffect(() => {
     if (!isLoaded || !currentUserId) return;
@@ -109,44 +112,44 @@ const Victordle = () => {
 
   const handleTurnTimeout = async () => {
     if (!currentGame) return;
-    
+
     // Find the other player's ID (currentGame.currentTurn holds the ID of the active player)
     const nextTurn = Object.keys(currentGame.players).find(
-    (id) => id !== currentGame.currentTurn
+      (id) => id !== currentGame.currentTurn
     );
-    
+
     if (!nextTurn) return;
-    
+
     const updates: Partial<GameState> = {
-    currentTurn: nextTurn,
-    lastMoveTimestamp: Date.now(),
-    };
-    
-    // Update the game state on Firestore
-    await gameManager.updateGameState(currentGame.id, updates);
-    
-    // Reset the timer for the new turn
-    setTimer(10);
+      currentTurn: nextTurn,
+      lastMoveTimestamp: Date.now(),
     };
 
-    useEffect(() => {
-      // Only run the countdown if the game is active
-      if (!currentGame || currentGame.status === "finished") return;
-      
-      const countdown = setInterval(() => {
+    // Update the game state on Firestore
+    await gameManager.updateGameState(currentGame.id, updates);
+
+    // Reset the timer for the new turn
+    setTimer(10);
+  };
+
+  useEffect(() => {
+    // Only run the countdown if the game is active
+    if (!currentGame || currentGame.status === "finished") return;
+
+    const countdown = setInterval(() => {
       setTimer((prevTimer) => {
-      if (prevTimer <= 1) {
-      // Time's up for the current turn: pass the turn
-      handleTurnTimeout();
-      // Return 10 for the new turn's timer (or 10 if you decide to reset immediately)
-      return 10;
-      }
-      return prevTimer - 1;
+        if (prevTimer <= 1) {
+          // Time's up for the current turn: pass the turn
+          handleTurnTimeout();
+          // Reset timer for the new turn
+          return 10;
+        }
+        return prevTimer - 1;
       });
-      }, 1000);
-      
-      return () => clearInterval(countdown);
-      }, [currentGame?.currentTurn, currentGame?.status]);
+    }, 1000);
+
+    return () => clearInterval(countdown);
+  }, [currentGame?.currentTurn, currentGame?.status]);
 
   useEffect(() => {
     if (currentGame) {
@@ -240,8 +243,7 @@ const Victordle = () => {
     } else if (playerGuesses.length === 6) {
       updates.status = "finished";
     }
-    console.log("Updates: ");
-    console.log(updates);
+    console.log("Updates: ", updates);
     // Update game state in Firestore
     await gameManager.updateGameState(currentGame.id, updates);
   };
@@ -265,7 +267,6 @@ const Victordle = () => {
         // The guess remains on the grid; simply submit it.
         await submitGuess(guess);
       }
-      // Do not clear the grid row; let it remain as a past guess.
       return;
     }
 
@@ -274,7 +275,6 @@ const Victordle = () => {
         newGrid[currentRow][currentCol - 1] = "";
         setCurrentCol(currentCol - 1);
       }
-      // Update grid state so that the deletion is shown.
       setGrid(newGrid);
       return;
     }
@@ -283,7 +283,6 @@ const Victordle = () => {
       newGrid[currentRow][currentCol] = key.toUpperCase();
       setCurrentCol(currentCol + 1);
     }
-    // Update the grid with the new letter (or change) while preserving all previous rows.
     setGrid(newGrid);
   };
 
@@ -303,7 +302,6 @@ const Victordle = () => {
   // Update letter states based on all guesses when game state changes
   useEffect(() => {
     if (currentGame) {
-      // Create sets to track unique letters for each category
       const greenSet = new Set<string>();
       const yellowSet = new Set<string>();
       const graySet = new Set<string>();
@@ -316,7 +314,6 @@ const Victordle = () => {
         )
         .sort((a, b) => a.timestamp - b.timestamp);
 
-      // Process each guess from both players
       allGuesses.forEach((guess) => {
         const word = guess.word;
         const colors = guess.colors;
@@ -326,25 +323,18 @@ const Victordle = () => {
           const color = colors[i];
 
           if (color === "#6aaa64") {
-            // green
-            // Remove from other sets if exists
             yellowSet.delete(letter);
             graySet.delete(letter);
             greenSet.add(letter);
           } else if (color === "#c9b458" && !greenSet.has(letter)) {
-            // yellow
-            // Only add to yellow if not in green
             graySet.delete(letter);
             yellowSet.add(letter);
           } else if (!greenSet.has(letter) && !yellowSet.has(letter)) {
-            // gray
-            // Only add to gray if not in green or yellow
             graySet.add(letter);
           }
         }
       });
 
-      // Update state with new letter sets
       setGreenLetters(Array.from(greenSet));
       setYellowLetters(Array.from(yellowSet));
       setGrayLetters(Array.from(graySet));
@@ -387,7 +377,9 @@ const Victordle = () => {
       <View style={styles.matchmakingContainer}>
         <ActivityIndicator size="large" color="#0000ff" />
         <Text style={styles.searchingText}>Searching for players...</Text>
-        <Text style={styles.searchingSubtext}>This may take a few moments</Text>
+        <Text style={styles.searchingSubtext}>
+          This may take a few moments
+        </Text>
       </View>
     );
   }
@@ -467,7 +459,6 @@ const Victordle = () => {
                         sortedGuesses[rowIndex].colors[colIndex];
                     }
                   }
-
                   return (
                     <View
                       key={colIndex}
@@ -504,6 +495,40 @@ const Victordle = () => {
           )}
         </>
       )}
+
+      {/* Floating Help Button */}
+      <TouchableOpacity
+        style={styles.helpButton}
+        onPress={() => setHelpVisible(true)}
+      >
+        <Text style={styles.helpButtonText}>?</Text>
+      </TouchableOpacity>
+
+      {/* Help Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={helpVisible}
+        onRequestClose={() => setHelpVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>How to Play</Text>
+            <Text style={styles.modalText}>
+              Enter your guess using the on-screen keyboard. Green letters mean
+              the letter is correct and in the right place; yellow means it is
+              in the word but in the wrong place; gray means the letter is not
+              in the word. Try to guess the word in six attempts!
+            </Text>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setHelpVisible(false)}
+            >
+              <Text style={styles.modalCloseText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -540,25 +565,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: "center",
   },
-  // playerInfo: {
-  //   flexDirection: "row",
-  //   justifyContent: "space-between",
-  //   alignItems: "center",
-  //   marginBottom: 20,
-  // },
-  // player: {
-  //   fontSize: 16,
-  //   fontWeight: "bold",
-  //   color: "#fff",
-  // },
-  // activePlayer: {
-  //   color: "blue",
-  // },
-  // timer: {
-  //   fontSize: 16,
-  //   fontWeight: "bold",
-  //   color: "#fff",
-  // },
   grid: {
     alignSelf: "center",
     marginBottom: 20,
@@ -580,18 +586,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#000",
-  },
-  correct: {
-    backgroundColor: "#6aaa64",
-    borderColor: "#6aaa64",
-  },
-  misplaced: {
-    backgroundColor: "#c9b458",
-    borderColor: "#c9b458",
-  },
-  incorrect: {
-    backgroundColor: "#787c7e",
-    borderColor: "#787c7e",
   },
   matchmakingContainer: {
     flex: 1,
@@ -651,6 +645,58 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#fff",
     opacity: 0.8,
+  },
+  // Floating help button styles
+  helpButton: {
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+    backgroundColor: "#4CAF50",
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
+  },
+  helpButtonText: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  // Help modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalCloseButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+  },
+  modalCloseText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
 
