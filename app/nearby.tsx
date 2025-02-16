@@ -20,11 +20,15 @@ export default function Nearby() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [nearbyUsers, setNearbyUsers] = useState<any[]>([]);
   const { currentUserId, username } = useCurrentUser(); // Add currentUserId
-  const [currentPair, setCurrentPair] = useState<UserPair | null>(null);
+  const [currentPair, setCurrentPair] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isScannerVisible, setScannerVisible] = useState(false);
   const [cameraPermission, requestCameraPermission] = useCameraPermissions();
   const scannedRef = useRef(false);
+
+  // New states for the target selection animation
+  const [animationActive, setAnimationActive] = useState(false);
+  const [highlightedUserId, setHighlightedUserId] = useState<string | null>(null);
 
   // Request location permissions and get the initial location
   useEffect(() => {
@@ -109,29 +113,52 @@ export default function Nearby() {
   }, [username]);
 
   const handleFindPair = async () => {
-    if (!username || isLoading) return;
+    if (!username || isLoading || animationActive) return;
     setIsLoading(true);
+
+    // Remove existing pair if any
+    if (currentPair) {
+      await pairManager.removePair(username);
+    }
     
-    try {
-      // Remove existing pair if any
-      if (currentPair) {
-        await pairManager.removePair(username);
+    // Select available users (excluding self)
+    const availableUsers = nearbyUsers.filter(user => user.id !== username);
+    console.log("Available users:", availableUsers);
+    if (availableUsers.length === 0) {
+      setIsLoading(false);
+      alert("No nearby users to select from.");
+      return;
+    }
+    
+    // Start the animation
+    setAnimationActive(true);
+    let animationInterval: NodeJS.Timeout | null = null;
+    
+    // Update the highlighted user every 200ms
+    animationInterval = setInterval(() => {
+      const randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+      setHighlightedUserId(randomUser.id);
+    }, 200);
+    
+    // After 5 seconds, finalize the selection
+    setTimeout(async () => {
+      if (animationInterval) {
+        clearInterval(animationInterval);
       }
-      
-      // Select random user from nearby users
-      const availableUsers = nearbyUsers.filter(user => user.id !== username);
-      console.log(availableUsers);
-      if (availableUsers.length > 0) {
-        const randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
-        await pairManager.createPair(username, randomUser.id);
+      // Final random selection
+      const finalTarget = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+      setHighlightedUserId(finalTarget.id);
+      try {
+        await pairManager.createPair(username, finalTarget.id);
         const newPair = await pairManager.getCurrentPair(username);
         setCurrentPair(newPair);
+      } catch (error) {
+        console.error('Error finding pair:', error);
+      } finally {
+        setAnimationActive(false);
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error finding pair:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    }, 5000);
   };
 
   const handleBarCodeScanned = async ({
@@ -195,13 +222,16 @@ export default function Nearby() {
     );
   }
 
-  const renderUser = ({ item }: { item: any }) => (
-    <View style={styles.userRow}>
-      <Text style={styles.usernameText}>{item.id}</Text>
-      <Text style={styles.centerText}>{item.score || 0}</Text>
-      <Text style={styles.distanceText}>{Math.round(item.distance)} m</Text>
-    </View>
-  );
+  const renderUser = ({ item }: { item: any }) => {
+    const isHighlighted = item.id === highlightedUserId;
+    return (
+      <View style={[styles.userRow, isHighlighted && styles.highlightedRow]}>
+        <Text style={styles.usernameText}>{item.id}</Text>
+        <Text style={styles.centerText}>{item.score || 0}</Text>
+        <Text style={styles.distanceText}>{Math.round(item.distance)} m</Text>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -221,7 +251,7 @@ export default function Nearby() {
         <>
           <Text style={styles.header}>Nearby Users</Text>
           
-          {/* Add Pairing Status and Controls */}
+          {/* Pairing Status and Controls */}
           <View style={styles.pairingSection}>
             {currentPair ? (
               <>
@@ -231,8 +261,12 @@ export default function Nearby() {
                     : `🎯 Find and scan: ${currentPair.targetId}`}
                 </Text>
                 <TouchableOpacity 
-                  style={styles.rerollButton}
+                  style={[
+                    styles.rerollButton, 
+                    (animationActive || isLoading) && styles.disabledButton
+                  ]}
                   onPress={handleFindPair}
+                  disabled={animationActive || isLoading}
                 >
                   <Text style={styles.buttonText}>
                     {currentPair.completed ? 'Find New Pair' : 'Re-roll Target'}
@@ -241,9 +275,12 @@ export default function Nearby() {
               </>
             ) : (
               <TouchableOpacity 
-                style={styles.findButton}
+                style={[
+                  styles.findButton, 
+                  (animationActive || isLoading) && styles.disabledButton
+                ]}
                 onPress={handleFindPair}
-                disabled={isLoading}
+                disabled={animationActive || isLoading}
               >
                 <Text style={styles.buttonText}>
                   {isLoading ? 'Finding...' : 'Find Someone to Scan'}
@@ -291,6 +328,9 @@ const additionalStyles = StyleSheet.create({
     borderRadius: 8,
     width: '100%',
   },
+  disabledButton: {
+    backgroundColor: '#999',
+  },
   buttonText: {
     color: '#fff',
     textAlign: 'center',
@@ -332,6 +372,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#444",
+  },
+  highlightedRow: {
+    backgroundColor: 'rgba(0,255,0,0.3)',
   },
   usernameText: {
     fontSize: 18,
