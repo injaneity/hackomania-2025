@@ -252,6 +252,51 @@ const Victordle = () => {
     }
   }, [currentGame?.status]);
 
+  // Update letter states based on all guesses when game state changes
+  useEffect(() => {
+    if (currentGame) {
+      // Create sets to track unique letters for each category
+      const greenSet = new Set<string>();
+      const yellowSet = new Set<string>();
+      const graySet = new Set<string>();
+
+      // Get all guesses from both players in timestamp order
+      const allGuesses = currentGame.playerOrder.reduce((acc, playerId) => 
+        [...acc, ...currentGame.players[playerId].guesses], [] as GuessColors[]
+      ).sort((a, b) => a.timestamp - b.timestamp);
+
+      // Process each guess from both players
+      allGuesses.forEach(guess => {
+        const word = guess.word;
+        const colors = guess.colors;
+
+        for (let i = 0; i < word.length; i++) {
+          const letter = word[i].toUpperCase();
+          const color = colors[i];
+
+          if (color === '#6aaa64') { // green
+            // Remove from other sets if exists
+            yellowSet.delete(letter);
+            graySet.delete(letter);
+            greenSet.add(letter);
+          } else if (color === '#c9b458' && !greenSet.has(letter)) { // yellow
+            // Only add to yellow if not in green
+            graySet.delete(letter);
+            yellowSet.add(letter);
+          } else if (!greenSet.has(letter) && !yellowSet.has(letter)) { // gray
+            // Only add to gray if not in green or yellow
+            graySet.add(letter);
+          }
+        }
+      });
+
+      // Update state with new letter sets
+      setGreenLetters(Array.from(greenSet));
+      setYellowLetters(Array.from(yellowSet));
+      setGrayLetters(Array.from(graySet));
+    }
+  }, [currentGame?.players]);
+
   useEffect(() => {
     return () => {
       queueManager?.leaveQueue();
