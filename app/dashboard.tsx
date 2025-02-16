@@ -119,7 +119,7 @@ export default function Dashboard() {
       {/* Event Score & Rank Row */}
       <View style={styles.eventScoreRow}>
         <View style={styles.arcContainer}>
-          <ArcProgress percentage={arcPercentage} size={140} strokeWidth={12} />
+          <ArcProgress percentage={arcPercentage} size={160} strokeWidth={15} />
           <View style={styles.arcTextOverlay}>
             <Text style={styles.scoreText}>{formatScore(currentUserScore)}</Text>
           </View>
@@ -136,7 +136,7 @@ export default function Dashboard() {
       <View style={styles.leaderboardSection}>
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Rank</Text>
-          <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Name</Text>
+          <Text style={[styles.tableHeaderCell, { flex: 3 }]}>Name</Text>
           <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Score</Text>
         </View>
         {leaderboard.map((player, index) => (
@@ -147,8 +147,8 @@ export default function Dashboard() {
               player.id === currentUserId && styles.currentUserRow,
             ]}
           >
-            <Text style={[styles.tableCell, { flex: 1 }]}>{index + 1}.</Text>
-            <Text style={[styles.tableCell, { flex: 2 }]}>{player.username}</Text>
+            <Text style={[styles.tableCell, { flex: 1 }]}>{index + 1}</Text>
+            <Text style={[styles.tableCell, { flex: 3 }]}>{player.username}</Text>
             <Text style={[styles.tableCell, { flex: 2 }]}>{formatScore(player.score)}</Text>
           </View>
         ))}
@@ -168,10 +168,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#333",
     borderRadius: 8,
-    padding: 16,
+    padding: 18,
     marginBottom: 16,
+    marginTop: 10,
   },
   headerLeft: {
     flex: 2,
@@ -185,14 +185,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#333",
-    borderRadius: 8,
-    padding: 32,
-    paddingLeft: 44,
+    borderRadius: 15,
+    padding: 40,
+    paddingVertical: 50,
     marginBottom: 16,
     justifyContent: "space-between",
   },
   arcContainer: {
     position: 'relative',
+     alignItems: "flex-end",
+    
   },
   arcTextOverlay: {
     position: 'absolute',
@@ -226,13 +228,13 @@ const styles = StyleSheet.create({
   /* Leaderboard Section (Table) Styles */
   leaderboardSection: {
     backgroundColor: "#333",
-    borderRadius: 8,
+    borderRadius: 15,
     padding: 16,
-    marginBottom: 16,
+    paddingVertical: 25,
+    marginTop: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "white",
     marginBottom: 8,
   },
@@ -242,12 +244,13 @@ const styles = StyleSheet.create({
     borderBottomColor: "#555",
     paddingBottom: 8,
     marginBottom: 8,
-    paddingHorizontal: 8
+    paddingHorizontal: 8,
   },
   tableHeaderCell: {
     fontSize: 18,
     color: "#4CAF50",
     textAlign: "left",
+    fontWeight: "bold",
   },
   tableRow: {
     flexDirection: "row",
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   currentUserRow: {
-    backgroundColor: "rgba(76, 175, 80, 0.2)", // Light green background
+    backgroundColor: "rgba(76, 175, 80, 0.2)",
   },
   /* Modal Styles */
   modalOverlay: {
