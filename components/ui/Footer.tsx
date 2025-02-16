@@ -25,6 +25,9 @@ export default function Footer() {
           <TouchableOpacity onPress={() => router.replace('/victordle')}>
             <Ionicons name="game-controller-outline" size={24} color={headerColors.text} />
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.replace('/nearby')}>
+            <Ionicons name="map-outline" size={24} color={headerColors.text} />
+          </TouchableOpacity>
   
         </View>
       </SafeAreaView>
