@@ -1,24 +1,15 @@
-import { StyleSheet } from 'react-native';
-
-export const Typography = StyleSheet.create({
+// Example: Typography.ts
+export const Typography = {
   header: {
-    fontFamily: 'CaveatBrush_400Regular',
-    fontSize: 32,
-    fontWeight: 'normal',
+    fontFamily: 'Inter_700Bold', // Use the Inter font
+    fontSize: 24,
   },
   subheader: {
-    fontFamily: 'CaveatBrush_400Regular',
-    fontSize: 24,
-    fontWeight: 'normal',
+    fontFamily: 'Inter_500Medium',
+    fontSize: 18,
   },
   body: {
-    fontFamily: 'CaveatBrush_400Regular',
-    fontSize: 18,
-    fontWeight: 'normal',
+    fontFamily: 'Inter_400Regular',
+    fontSize: 16,
   },
-  small: {
-    fontFamily: 'CaveatBrush_400Regular',
-    fontSize: 18,
-    fontWeight: 'normal',
-  }
-});
+};

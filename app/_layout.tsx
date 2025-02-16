@@ -6,14 +6,14 @@ import {
 } from 'react-native';
 import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
 import { Stack } from 'expo-router';
-import {
-  useFonts,
-  FrankRuhlLibre_800ExtraBold,
-  FrankRuhlLibre_500Medium,
-  FrankRuhlLibre_900Black,
-} from '@expo-google-fonts/frank-ruhl-libre';
-import { CaveatBrush_400Regular } from '@expo-google-fonts/caveat-brush'
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { 
+  useFonts, 
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold 
+} from '@expo-google-fonts/inter';
+import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -22,7 +22,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StackAnimationOptions } from '@react-navigation/stack';
 import Header from '@/components/ui/Header';
 import Footer from '@/components/ui/Footer';
-
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -36,15 +35,15 @@ if (!publishableKey) {
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  // Force dark theme for the layout (this can be adjusted as needed)
+  // Force dark theme for the layout
   const theme = DarkTheme;
 
-  // Load custom fonts
+  // Load Inter fonts
   const [fontsLoaded] = useFonts({
-    FrankRuhlLibre_800ExtraBold,
-    FrankRuhlLibre_500Medium,
-    FrankRuhlLibre_900Black,
-    CaveatBrush_400Regular,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
   });
 
   useEffect(() => {
@@ -97,7 +96,7 @@ export default function RootLayout() {
                       }}
                     />
                   </Stack>
-                  <Footer/>
+                  <Footer />
                 </View>
               </BottomSheetModalProvider>
             </GestureHandlerRootView>
@@ -111,7 +110,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   headerSafeArea: {
     width: '100%',
-    
   },
   headerContainer: {
     flexDirection: 'row',
@@ -132,5 +130,5 @@ const styles = StyleSheet.create({
   },
   iconButtonActive: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  }
+  },
 });
