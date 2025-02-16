@@ -1,14 +1,21 @@
 import { db } from '../firebase/firebaseConfig';
 import { doc, setDoc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
+export interface GuessColors {
+  word: string;
+  timestamp: number;
+  colors: string[]; // Array of 5 colors for each letter
+}
+
 export interface GameState {
   id: string;
+  playerOrder: string[];  // Array of player IDs in order of turns
   players: {
     [key: string]: {
       id: string;
       username: string;
       score: number;
-      guesses: string[];
+      guesses: GuessColors[];
     };
   };
   word: string;
@@ -23,6 +30,7 @@ export class GameManager {
   async createGame(gameId: string, player1Id: string, player2Id: string): Promise<GameState> {
     const gameState: GameState = {
       id: gameId,
+      playerOrder: [player1Id, player2Id],  // Store player order
       players: {
         [player1Id]: {
           id: player1Id,
@@ -60,7 +68,7 @@ export class GameManager {
   }
 
   private getRandomWord() {
-    const words = ['REACT', 'LOGIC', 'DEBUG', 'CLASS', 'ARRAY'];
+    const words = ['CLASS'];
     return words[Math.floor(Math.random() * words.length)];
   }
 }

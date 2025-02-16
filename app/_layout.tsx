@@ -19,7 +19,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { tokenCache } from '@/utils/cache';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StackAnimationOptions } from '@react-navigation/stack';
 import Header from '@/components/ui/Header';
 import Footer from '@/components/ui/Footer';
 
@@ -60,11 +59,6 @@ export default function RootLayout() {
     );
   }
 
-  const getAnimationConfig = (direction?: string): StackAnimationOptions => ({
-    animation: direction === 'right' ? 'slide_from_right' : 'slide_from_left',
-    gestureEnabled: false,  // Disable gesture navigation
-  });
-
   return (
     <SafeAreaProvider>
       <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
@@ -77,7 +71,6 @@ export default function RootLayout() {
                   <Stack
                     screenOptions={({ route }) => ({
                       headerShown: false,
-                      ...getAnimationConfig(route.params?.direction),
                     })}
                   >
                     <Stack.Screen name="index" />

@@ -28,39 +28,40 @@ const OnScreenKeyboard = ({
   const keyWidth = Platform.OS === 'web' ? 58 : (width - 60) / keys[0].length;
   const keyHeight = 60;
 
-  const isSpecialKey = (key: string) => key === ENTER || key === BACKSPACE;
+  const getKeyColor = (key: string) => {
+    const upperKey = key.toUpperCase();
+    if (greenLetters.includes(upperKey)) return '#6aaa64';
+    if (yellowLetters.includes(upperKey)) return '#c9b458';
+    if (grayLetters.includes(upperKey)) return Colors.light.gray;
+    return '#ddd';
+  };
 
-  const isInLetters = (key: string) =>
-    [...greenLetters, ...yellowLetters, ...grayLetters].includes(key);
+  const isSpecialKey = (key: string) => key === ENTER || key === BACKSPACE;
 
   return (
     <View style={styles.container}>
       {keys.map((row, rowIndex) => (
         <View key={`row-${rowIndex}`} style={styles.row}>
-          {row.map((key, keyIndex) => (
+          {row.map((key) => (
             <Pressable
               onPress={() => onKeyPressed(key)}
               key={`key-${key}`}
               style={({ pressed }) => [
                 styles.key,
-                { width: keyWidth, height: keyHeight, backgroundColor: '#ddd' },
-                isSpecialKey(key) && { width: keyWidth * 1.5 },
-                pressed && { backgroundColor: '#868686' },
-                {
-                  backgroundColor: greenLetters.includes(key)
-                    ? Colors.light.green
-                    : yellowLetters.includes(key)
-                    ? Colors.light.yellow
-                    : grayLetters.includes(key)
-                    ? Colors.light.gray
-                    : '#ddd',
+                { 
+                  width: isSpecialKey(key) ? keyWidth * 1.5 : keyWidth, 
+                  height: keyHeight,
+                  backgroundColor: isSpecialKey(key) ? '#ddd' : getKeyColor(key)
                 },
+                pressed && { opacity: 0.8 }
               ]}>
               <Text
                 style={[
                   styles.keyText,
-                  key === 'ENTER' && { fontSize: 12 },
-                  isInLetters(key) && { color: '#fff' },
+                  key === ENTER && { fontSize: 12 },
+                  !isSpecialKey(key) && (greenLetters.includes(key.toUpperCase()) ||
+                    yellowLetters.includes(key.toUpperCase()) ||
+                    grayLetters.includes(key.toUpperCase())) && { color: '#fff' }
                 ]}>
                 {isSpecialKey(key) ? (
                   key === ENTER ? (
