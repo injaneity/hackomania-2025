@@ -29,26 +29,21 @@ const ArcProgress = ({
 
   return (
     <Svg width={size} height={size}>
-      <Defs>
-        <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="#FFFFFF" stopOpacity="1" />
-          <Stop offset="1" stopColor="#058789" stopOpacity="1" />
-        </LinearGradient>
-      </Defs>
       {/* Background circle */}
       <Circle
         cx={size / 2}
         cy={size / 2}
         r={radius}
+        stroke="#DAD2BA" // or another neutral color
         strokeWidth={strokeWidth}
         fill="none"
       />
-      {/* Progress arc */}
+      {/* Progress arc (solid teal) */}
       <Circle
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="url(#grad)"
+        stroke="#008080" // Retro teal
         strokeWidth={strokeWidth}
         fill="none"
         strokeDasharray={`${circumference} ${circumference}`}
@@ -146,7 +141,7 @@ export default function Dashboard() {
       </View>
 
       {/* Leaderboard Section as Table */}
-      <View style={styles.leaderboardSection}>
+      <ScrollView style={styles.leaderboardSection} nestedScrollEnabled>
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Rank</Text>
           <Text style={[styles.tableHeaderCell, { flex: 3 }]}>Name</Text>
@@ -169,7 +164,7 @@ export default function Dashboard() {
             </Text>
           </View>
         ))}
-      </View>
+      </ScrollView>
     </ScrollView>
   );
 }
@@ -246,6 +241,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingVertical: 25,
     marginTop: 4,
+    maxHeight: 250,
   },
   sectionTitle: {
     fontSize: 18,
