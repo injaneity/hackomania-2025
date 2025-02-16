@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { Typography } from '@/constants/Typography';
-import { Text } from '@/components/ui/StyledText';
-import { leaderboardManager, PlayerScore } from '@/utils/leaderboardManager';
-import { useCurrentUser } from '@/hooks/useCurrentUser';
-import QRCode from 'react-native-qrcode-svg';
+import React, { useEffect, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { Typography } from "@/constants/Typography";
+import { Text } from "@/components/ui/StyledText";
+import { leaderboardManager, PlayerScore } from "@/utils/leaderboardManager";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import QRCode from "react-native-qrcode-svg";
 import {
   View,
   StyleSheet,
@@ -12,19 +12,27 @@ import {
   Modal,
   ScrollView,
 } from "react-native";
-import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Stop } from "react-native-svg";
 
-const ArcProgress = ({ percentage, size, strokeWidth }: { percentage: number; size: number; strokeWidth: number }) => {
+const ArcProgress = ({
+  percentage,
+  size,
+  strokeWidth,
+}: {
+  percentage: number;
+  size: number;
+  strokeWidth: number;
+}) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (circumference * percentage);
+  const strokeDashoffset = circumference - circumference * percentage;
 
   return (
     <Svg width={size} height={size}>
       <Defs>
         <LinearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="green" stopOpacity="1" />
-          <Stop offset="1" stopColor="yellow" stopOpacity="1" />
+          <Stop offset="0" stopColor="#1E88E5" stopOpacity="1" />
+          <Stop offset="1" stopColor="#F4A261" stopOpacity="1" />
         </LinearGradient>
       </Defs>
       {/* Background circle */}
@@ -32,7 +40,7 @@ const ArcProgress = ({ percentage, size, strokeWidth }: { percentage: number; si
         cx={size / 2}
         cy={size / 2}
         r={radius}
-        stroke="#555"
+        stroke="#DAD2BA"
         strokeWidth={strokeWidth}
         fill="none"
       />
@@ -63,7 +71,7 @@ export default function Dashboard() {
     const unsubscribe = leaderboardManager.subscribeToLeaderboard((players) => {
       setLeaderboard(players);
       if (currentUserId) {
-        const rank = players.findIndex(p => p.id === currentUserId) + 1;
+        const rank = players.findIndex((p) => p.id === currentUserId) + 1;
         setUserRank(rank > 0 ? rank : null);
       }
     });
@@ -71,7 +79,8 @@ export default function Dashboard() {
   }, [currentUserId]);
 
   // Get the current user's event score (defaulting to 0)
-  const currentUserScore = leaderboard.find(p => p.id === currentUserId)?.score || 0;
+  const currentUserScore =
+    leaderboard.find((p) => p.id === currentUserId)?.score || 0;
   // Compute the percentage fill relative to the nearest 100 (using remainder)
   const arcPercentage = (currentUserScore % 100) / 100;
   const formatScore = (score: number) => score.toLocaleString();
@@ -87,7 +96,7 @@ export default function Dashboard() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <QRCode
-              value={username}  // Change back to username
+              value={username} // Change back to username
               size={200}
               backgroundColor="transparent"
               color="black"
@@ -105,8 +114,12 @@ export default function Dashboard() {
       {/* Header Row: 2/3 for name and team; 1/3 for QR code icon */}
       <View style={styles.headerRow}>
         <View style={styles.headerLeft}>
-          <Text style={[Typography.header, { color: 'white' }]}>{username}</Text>
-          <Text style={[Typography.subheader, { color: '#aaa' }]}>Leetcode Therapy</Text>
+          <Text style={[Typography.header, { color: "#FFFFFF" }]}>
+            {username}
+          </Text>
+          <Text style={[Typography.subheader, { color: "#FFFFFF" }]}>
+            Leetcode Therapy
+          </Text>
         </View>
         <View style={styles.headerRight}>
           <TouchableOpacity onPress={() => setQrVisible(true)}>
@@ -120,7 +133,9 @@ export default function Dashboard() {
         <View style={styles.arcContainer}>
           <ArcProgress percentage={arcPercentage} size={160} strokeWidth={15} />
           <View style={styles.arcTextOverlay}>
-            <Text style={styles.scoreText}>{formatScore(currentUserScore)}</Text>
+            <Text style={styles.scoreText}>
+              {formatScore(currentUserScore)}
+            </Text>
           </View>
         </View>
         {userRank && (
@@ -147,8 +162,12 @@ export default function Dashboard() {
             ]}
           >
             <Text style={[styles.tableCell, { flex: 1 }]}>{index + 1}</Text>
-            <Text style={[styles.tableCell, { flex: 3 }]}>{player.username}</Text>
-            <Text style={[styles.tableCell, { flex: 2 }]}>{formatScore(player.score)}</Text>
+            <Text style={[styles.tableCell, { flex: 3 }]}>
+              {player.username}
+            </Text>
+            <Text style={[styles.tableCell, { flex: 2 }]}>
+              {formatScore(player.score)}
+            </Text>
           </View>
         ))}
       </View>
@@ -159,10 +178,9 @@ export default function Dashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "black",
+    backgroundColor: "#F5F1EA", // Cream
     padding: 16,
   },
-  /* Header Row Styles */
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -171,6 +189,7 @@ const styles = StyleSheet.create({
     padding: 18,
     marginBottom: 16,
     marginTop: 10,
+    backgroundColor: "#C84C31", // Dark Orange / Rust
   },
   headerLeft: {
     flex: 2,
@@ -179,35 +198,35 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "flex-end",
   },
-  /* Event Score & Rank Row */
   eventScoreRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#333",
     borderRadius: 15,
     padding: 40,
     paddingVertical: 50,
     marginBottom: 16,
     justifyContent: "space-between",
+    backgroundColor: "#D9A12D", // Golden Yellow
+    borderWidth: 1,
+    borderColor: "#D4973B", // Golden Yellow
   },
   arcContainer: {
-    position: 'relative',
-     alignItems: "flex-end",
-    
+    position: "relative",
+    alignItems: "flex-end",
   },
   arcTextOverlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scoreText: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "white",
+    color: "#1B4B43", // Dark Teal
   },
   rankContainer: {
     flex: 1,
@@ -216,29 +235,30 @@ const styles = StyleSheet.create({
   },
   rankLabel: {
     fontSize: 18,
-    color: "white",
+    color: "#ffffff", // Dark Teal
     marginBottom: 4,
   },
   rankText: {
     fontSize: 64,
     fontWeight: "bold",
-    color: "#4CAF50",
+    color: "#9B2D16", // Deep Blue for better contrast
   },
-  /* Leaderboard Section (Table) Styles */
   leaderboardSection: {
-    backgroundColor: "#333",
+    backgroundColor: "#2A9D8F", // Teal
     borderRadius: 15,
     padding: 16,
     paddingVertical: 25,
     marginTop: 16,
+    borderWidth: 1,
+    borderColor: "#D4973B", // Golden Yellow
   },
   sectionTitle: {
     fontSize: 18,
-    color: "white",
+    color: "#FFFFFF", // White for contrast against Teal
     marginBottom: 8,
   },
   tableHeader: {
-    flexDirection: "row",    
+    flexDirection: "row",
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#555",
     paddingBottom: 8,
@@ -247,8 +267,8 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     fontSize: 18,
-    color: "#4CAF50",
     textAlign: "left",
+    color: "#FFFFFF", // White text for contrast
     fontWeight: "bold",
   },
   tableRow: {
@@ -256,18 +276,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#555",
-    paddingHorizontal: 8
-
+    paddingHorizontal: 8,
   },
   tableCell: {
     fontSize: 16,
-    color: "white",
+    color: "#FFFFFF", // White text for the Teal background
     textAlign: "left",
   },
   currentUserRow: {
-    backgroundColor: "rgba(76, 175, 80, 0.2)",
+    backgroundColor: "rgba(42, 157, 143, 0.1)", // Teal tint
   },
-  /* Modal Styles */
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
@@ -275,20 +293,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "white",
+    backgroundColor: "#F5F1EA", // Cream
     padding: 24,
     borderRadius: 8,
     alignItems: "center",
   },
   closeButton: {
     marginTop: 16,
-    backgroundColor: "#333",
+    backgroundColor: "#2A9D8F", // Teal
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 4,
   },
   closeButtonText: {
-    color: "white",
+    color: "#FFFFFF",
     fontWeight: "bold",
   },
 });
