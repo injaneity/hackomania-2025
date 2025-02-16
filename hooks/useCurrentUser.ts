@@ -4,7 +4,7 @@ export const useCurrentUser = () => {
   const { user, isLoaded, isSignedIn } = useUser();
 
   return {
-    currentUserId: user?.id || null,
+    currentUserId: user?.id || '',
     username: user?.username || user?.emailAddresses[0]?.emailAddress?.split('@')[0] || 'Anonymous',
     isLoaded,
     isSignedIn,

@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
 import * as Location from 'expo-location';
 import { db } from '../firebase/firebaseConfig';
 import { doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
 import haversine from 'haversine-distance';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { pairManager } from '@/utils/pairManager';
+import { playerManager } from "@/utils/playerManager";
 
 const NEARBY_RADIUS = 500; // in meters
-const UPDATE_INTERVAL = 10000; // 10 seconds in milliseconds
+const UPDATE_INTERVAL = 5000; // 10 seconds in milliseconds
 const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 export default function Nearby() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [nearbyUsers, setNearbyUsers] = useState<any[]>([]);
-  const { username } = useCurrentUser(); // assuming username uniquely identifies the user
+  const { currentUserId, username } = useCurrentUser(); // Add currentUserId
+  const [currentPair, setCurrentPair] = useState<UserPair | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Request location permissions and get the initial location
   useEffect(() => {
@@ -31,20 +35,24 @@ export default function Nearby() {
 
   // Update location every 10 seconds and send it to Firestore
   useEffect(() => {
-    if (!location) return;
+    if (!location || !username) return;
     const intervalId = setInterval(async () => {
       try {
         const loc = await Location.getCurrentPositionAsync({});
         setLocation(loc);
-        // Simulate a score for testing purposes (replace with actual score if available)
-        const simulatedScore = Math.floor(Math.random() * 100);
+        
+        // Get current player's actual score
+        const player = await playerManager.getPlayer(username);
+        
         await setDoc(
           doc(db, "locations", username),
           {
             lat: loc.coords.latitude,
             lng: loc.coords.longitude,
             timestamp: new Date().toISOString(),
-            score: simulatedScore,
+            score: player?.score || 0, // Use actual player score
+            username: player?.username || username,
+            userid: player?.id || ''
           },
           { merge: true }
         );
@@ -82,6 +90,44 @@ export default function Nearby() {
     return () => unsubscribe();
   }, [location, username]);
 
+  // Add effect to fetch current pair
+  useEffect(() => {
+    if (!username) return;
+    
+    const checkCurrentPair = async () => {
+      const pair = await pairManager.getCurrentPair(username);
+      setCurrentPair(pair);
+    };
+    
+    checkCurrentPair();
+  }, [username]);
+
+  const handleFindPair = async () => {
+    if (!username || isLoading) return;
+    setIsLoading(true);
+    
+    try {
+      // Remove existing pair if any
+      if (currentPair) {
+        await pairManager.removePair(username);
+      }
+      
+      // Select random user from nearby users
+      const availableUsers = nearbyUsers.filter(user => user.id !== username);
+      console.log(availableUsers);
+      if (availableUsers.length > 0) {
+        const randomUser = availableUsers[Math.floor(Math.random() * availableUsers.length)];
+        await pairManager.createPair(username, randomUser.id);
+        const newPair = await pairManager.getCurrentPair(username);
+        setCurrentPair(newPair);
+      }
+    } catch (error) {
+      console.error('Error finding pair:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!location) {
     return (
       <View style={styles.container}>
@@ -94,6 +140,7 @@ export default function Nearby() {
   const renderUser = ({ item }: { item: any }) => (
     <View style={styles.userRow}>
       <Text style={styles.usernameText}>{item.id}</Text>
+      <Text style={styles.centerText}>{item.score || 0}</Text>
       <Text style={styles.distanceText}>{Math.round(item.distance)} m</Text>
     </View>
   );
@@ -101,6 +148,38 @@ export default function Nearby() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Nearby Users</Text>
+      
+      {/* Add Pairing Status and Controls */}
+      <View style={styles.pairingSection}>
+        {currentPair ? (
+          <>
+            <Text style={styles.pairingText}>
+              {currentPair.completed 
+                ? '✅ Completed! Find another pair?' 
+                : `🎯 Find and scan: ${currentPair.targetId}`}
+            </Text>
+            <TouchableOpacity 
+              style={styles.rerollButton}
+              onPress={handleFindPair}
+            >
+              <Text style={styles.buttonText}>
+                {currentPair.completed ? 'Find New Pair' : 'Re-roll Target'}
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity 
+            style={styles.findButton}
+            onPress={handleFindPair}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>
+              {isLoading ? 'Finding...' : 'Find Someone to Scan'}
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
         data={nearbyUsers}
         keyExtractor={(item) => item.id}
@@ -110,6 +189,40 @@ export default function Nearby() {
     </View>
   );
 }
+
+const additionalStyles = StyleSheet.create({
+  pairingSection: {
+    padding: 16,
+    backgroundColor: '#333',
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  pairingText: {
+    color: '#fff',
+    fontSize: 18,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  findButton: {
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 8,
+    width: '100%',
+  },
+  rerollButton: {
+    backgroundColor: '#2196F3',
+    padding: 12,
+    borderRadius: 8,
+    width: '100%',
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -160,4 +273,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
   },
+  ...additionalStyles,
 });
