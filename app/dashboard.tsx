@@ -80,7 +80,10 @@ export default function Dashboard() {
   const formatScore = (score: number) => score.toLocaleString();
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ flexGrow: 1 }}
+    >
       <Modal
         visible={qrVisible}
         transparent={true}
@@ -141,7 +144,14 @@ export default function Dashboard() {
       </View>
 
       {/* Leaderboard Section as Table */}
-      <ScrollView style={styles.leaderboardSection} nestedScrollEnabled>
+      <ScrollView
+        style={styles.leaderboardSection}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: 16,
+        }}
+        nestedScrollEnabled
+      >
         <View style={styles.tableHeader}>
           <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Rank</Text>
           <Text style={[styles.tableHeaderCell, { flex: 3 }]}>Name</Text>
