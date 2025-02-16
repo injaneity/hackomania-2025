@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
-// ArcProgress component draws a circular arc with a gradient fill
 const ArcProgress = ({ percentage, size, strokeWidth }: { percentage: number; size: number; strokeWidth: number }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -188,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
     borderRadius: 8,
     padding: 32,
-    paddingLeft: 128,
+    paddingLeft: 44,
     marginBottom: 16,
     justifyContent: "space-between",
   },

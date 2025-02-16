@@ -76,6 +76,7 @@ export default function RootLayout() {
                     <Stack.Screen name="index" />
                     <Stack.Screen name="dashboard" />
                     <Stack.Screen name="victordle" />
+                    <Stack.Screen name="nearby" />
                     <Stack.Screen 
                       name="login" 
                       options={{ 
