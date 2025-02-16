@@ -11,13 +11,17 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
+import { pairManager } from '@/utils/pairManager';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { playerManager } from '@/utils/playerManager';
 
 export default function Scan() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const scannedRef = useRef(false);
+  const { currentUserId, username } = useCurrentUser();
 
-  const handleBarCodeScanned = ({
+  const handleBarCodeScanned = async ({
     type,
     data,
     bounds,
@@ -26,21 +30,39 @@ export default function Scan() {
     data: string;
     bounds?: any;
   }) => {
-    if (scannedRef.current) return;
-
+    if (scannedRef.current || !username) return;
     scannedRef.current = true;
-    console.log(`Scanned barcode with type ${type} and data: ${data}`);
 
-    if (Platform.OS === "android") {
-      ToastAndroid.show("QR Code Scanned!", ToastAndroid.SHORT);
-    } else {
-      alert("QR Code Scanned!");
+    try {
+      const isMatch = await pairManager.verifyAndCompletePair(username, data);
+      
+      if (isMatch) {
+        // Use new updateScoreByUsername method
+        await Promise.all([
+          playerManager.updateScoreByUsername(username, 5),    // Scanner gets 50 points
+          playerManager.updateScoreByUsername(data, 5),        // Scanned person gets 25 points
+        ]);
+
+        if (Platform.OS === "android") {
+          ToastAndroid.show("🎉 Match found! +5 points awarded!", ToastAndroid.LONG);
+        } else {
+          alert("🎉 Match found! +5 points awarded!");
+        }
+      } else {
+        if (Platform.OS === "android") {
+          ToastAndroid.show("Not your target! Keep searching!", ToastAndroid.SHORT);
+        } else {
+          alert("Not your target! Keep searching!");
+        }
+      }
+    } catch (error) {
+      console.error('Error verifying scan:', error);
     }
 
     setTimeout(() => {
       scannedRef.current = false;
-      router.replace("/dashboard");
-    }, 1500); // Adjust the delay as necessary
+      router.replace("/nearby");
+    }, 1500);
   };
 
   if (!permission) {

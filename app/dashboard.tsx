@@ -78,7 +78,6 @@ export default function Dashboard() {
 
   return (
     <ScrollView style={styles.container}>
-      {/* QR Code Modal */}
       <Modal
         visible={qrVisible}
         transparent={true}
@@ -88,7 +87,7 @@ export default function Dashboard() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <QRCode
-              value={username}
+              value={username}  // Change back to username
               size={200}
               backgroundColor="transparent"
               color="black"
