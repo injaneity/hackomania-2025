@@ -83,12 +83,6 @@ export default function RootLayout() {
                         presentation: 'modal',
                       }} 
                     />
-                    <Stack.Screen 
-                      name="scan" 
-                      options={{
-                        presentation: 'fullScreenModal',
-                      }}
-                    />
                   </Stack>
                   <Footer />
                 </View>

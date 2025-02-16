@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, TouchableOpacity, Platform, ToastAndroid } from 'react-native';
 import * as Location from 'expo-location';
 import { db } from '../firebase/firebaseConfig';
 import { doc, setDoc, onSnapshot, collection } from 'firebase/firestore';
@@ -7,6 +7,9 @@ import haversine from 'haversine-distance';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { pairManager } from '@/utils/pairManager';
 import { playerManager } from "@/utils/playerManager";
+import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { MaterialIcons } from "@expo/vector-icons";
+import FloatingActionButton from '@/components/ui/FloatingActionButton';
 
 const NEARBY_RADIUS = 500; // in meters
 const UPDATE_INTERVAL = 5000; // 10 seconds in milliseconds
@@ -19,6 +22,9 @@ export default function Nearby() {
   const { currentUserId, username } = useCurrentUser(); // Add currentUserId
   const [currentPair, setCurrentPair] = useState<UserPair | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isScannerVisible, setScannerVisible] = useState(false);
+  const [cameraPermission, requestCameraPermission] = useCameraPermissions();
+  const scannedRef = useRef(false);
 
   // Request location permissions and get the initial location
   useEffect(() => {
@@ -128,6 +134,58 @@ export default function Nearby() {
     }
   };
 
+  const handleBarCodeScanned = async ({
+    type,
+    data,
+  }: {
+    type: string;
+    data: string;
+  }) => {
+    if (scannedRef.current || !username) return;
+    scannedRef.current = true;
+
+    try {
+      const isMatch = await pairManager.verifyAndCompletePair(username, data);
+      
+      if (isMatch) {
+        await Promise.all([
+          playerManager.updateScoreByUsername(username, 5),
+          playerManager.updateScoreByUsername(data, 5),
+        ]);
+
+        if (Platform.OS === "android") {
+          ToastAndroid.show("🎉 Match found! +5 points awarded!", ToastAndroid.LONG);
+        } else {
+          alert("🎉 Match found! +5 points awarded!");
+        }
+      } else {
+        if (Platform.OS === "android") {
+          ToastAndroid.show("Not your target! Keep searching!", ToastAndroid.SHORT);
+        } else {
+          alert("Not your target! Keep searching!");
+        }
+      }
+    } catch (error) {
+      console.error('Error verifying scan:', error);
+    }
+
+    setTimeout(() => {
+      scannedRef.current = false;
+      setScannerVisible(false);
+    }, 1500);
+  };
+
+  const handleScanPress = async () => {
+    if (!cameraPermission?.granted) {
+      const permission = await requestCameraPermission();
+      if (!permission.granted) {
+        alert("We need camera permission to scan QR codes");
+        return;
+      }
+    }
+    setScannerVisible(true);
+  };
+
   if (!location) {
     return (
       <View style={styles.container}>
@@ -147,45 +205,62 @@ export default function Nearby() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Nearby Users</Text>
-      
-      {/* Add Pairing Status and Controls */}
-      <View style={styles.pairingSection}>
-        {currentPair ? (
-          <>
-            <Text style={styles.pairingText}>
-              {currentPair.completed 
-                ? '✅ Completed! Find another pair?' 
-                : `🎯 Find and scan: ${currentPair.targetId}`}
-            </Text>
-            <TouchableOpacity 
-              style={styles.rerollButton}
-              onPress={handleFindPair}
-            >
-              <Text style={styles.buttonText}>
-                {currentPair.completed ? 'Find New Pair' : 'Re-roll Target'}
-              </Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <TouchableOpacity 
-            style={styles.findButton}
-            onPress={handleFindPair}
-            disabled={isLoading}
+      {isScannerVisible ? (
+        <CameraView
+          style={StyleSheet.absoluteFillObject}
+          onBarcodeScanned={handleBarCodeScanned}
+        >
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setScannerVisible(false)}
           >
-            <Text style={styles.buttonText}>
-              {isLoading ? 'Finding...' : 'Find Someone to Scan'}
-            </Text>
+            <MaterialIcons name="close" size={24} color="white" />
           </TouchableOpacity>
-        )}
-      </View>
+        </CameraView>
+      ) : (
+        <>
+          <Text style={styles.header}>Nearby Users</Text>
+          
+          {/* Add Pairing Status and Controls */}
+          <View style={styles.pairingSection}>
+            {currentPair ? (
+              <>
+                <Text style={styles.pairingText}>
+                  {currentPair.completed 
+                    ? '✅ Completed! Find another pair?' 
+                    : `🎯 Find and scan: ${currentPair.targetId}`}
+                </Text>
+                <TouchableOpacity 
+                  style={styles.rerollButton}
+                  onPress={handleFindPair}
+                >
+                  <Text style={styles.buttonText}>
+                    {currentPair.completed ? 'Find New Pair' : 'Re-roll Target'}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity 
+                style={styles.findButton}
+                onPress={handleFindPair}
+                disabled={isLoading}
+              >
+                <Text style={styles.buttonText}>
+                  {isLoading ? 'Finding...' : 'Find Someone to Scan'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-      <FlatList
-        data={nearbyUsers}
-        keyExtractor={(item) => item.id}
-        renderItem={renderUser}
-        ListEmptyComponent={<Text style={styles.userText}>No users nearby.</Text>}
-      />
+          <FlatList
+            data={nearbyUsers}
+            keyExtractor={(item) => item.id}
+            renderItem={renderUser}
+            ListEmptyComponent={<Text style={styles.userText}>No users nearby.</Text>}
+          />
+          <FloatingActionButton onPress={handleScanPress} />
+        </>
+      )}
     </View>
   );
 }
@@ -221,6 +296,14 @@ const additionalStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
 });
 

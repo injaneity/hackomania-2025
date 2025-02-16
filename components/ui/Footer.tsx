@@ -19,9 +19,6 @@ export default function Footer() {
           <TouchableOpacity onPress={() => router.replace('/dashboard')}>
             <Ionicons name="grid-outline" size={24} color={headerColors.text} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace('/scan')}>
-            <Ionicons name="scan-outline" size={24} color={headerColors.text} />
-          </TouchableOpacity>
           <TouchableOpacity onPress={() => router.replace('/victordle')}>
             <Ionicons name="game-controller-outline" size={24} color={headerColors.text} />
           </TouchableOpacity>
