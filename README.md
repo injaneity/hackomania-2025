@@ -1,50 +1,51 @@
-# Welcome to your Expo app 👋
+# Sidequest
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Hackathons don't have to be painful 24-hour debugging sessions. Why not face a different kind of challenge—one that goes beyond a hackathon win and earns you social clout? Sidequest presents you with a unique premise: find nearby tech enthusiasts, challenge them to a noble game of 1v1 Wordle, and duel for honor (or points).
 
-## Get started
+Sidequest offers an all-in-one platform for hackathon organizers to integrate into their pre-existing participant dashboards, boosting participant engagement and socialization—all at the cost of a few imaginary points. What more could you ask for?
 
-1. Install dependencies
+## Tech Stack
 
-   ```bash
-   npm install
-   ```
+- **Expo & React Native:** For rapid cross-platform mobile development.
+- **Firebase:** For real-time data and backend services.
+- **Clerk Auth:** For seamless authentication and user management.
 
-2. Start the app
+## How It Works
 
-   ```bash
-    npx expo start
-   ```
+- **Matchmaking & Duels:**  
+  Players can match against other players either for fun or for points at hackathons or other events.
+  
+- **Leaderboard:**  
+  A dynamic leaderboard displays players ranked by their score—more points equal a higher rank. Woo!
 
-In the output, you'll find options to open the app in a
+- **Sidequest:**  
+  With Sidequest, hackathon participants not only compete in coding challenges but also get to socialize and network in a fun, gamified environment.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Getting Started
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### 1. Install Dependencies
 
-## Get a fresh project
-
-When you're ready, run:
+Run the following command in your project directory:
 
 ```bash
-npm run reset-project
+npm install --legacy-peer-deps
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Start the App
 
-## Learn more
+Start the Expo server with:
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npx expo start -c --tunnel
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+In the output, you'll see options to open the app in a:
 
-## Join the community
+- [Development Build](https://docs.expo.dev/develop/development-builds/introduction/)
+- [Android Emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+- [iOS Simulator](https://docs.expo.dev/workflow/ios-simulator/)
+- [Expo Go](https://expo.dev/go) (a limited sandbox for trying out app development with Expo)
 
-Join our community of developers creating universal apps.
+> **Tip:** To best test the application, we advise scanning the QR code (on iOS) or pasting the URL (on Android) in Expo Go.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Happy questing!
