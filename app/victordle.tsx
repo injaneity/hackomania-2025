@@ -9,17 +9,17 @@ import {
 import { playerManager } from "@/utils/playerManager";
 import { QueueManager } from "@/utils/queueManager";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { gameManager, GameState } from "@/utils/gameManager";
+import { gameManager, GameState, GuessColors } from "@/utils/gameManager";
 import OnScreenKeyboard, {
   ENTER,
   BACKSPACE,
 } from "@/components/ui/OnScreenKeyboard";
-import { Typography } from '@/constants/Typography';
+import { Typography } from "@/constants/Typography";
 
 const calculateGuessColors = (guess: string, targetWord: string): string[] => {
-  const colors = Array(5).fill('#787c7e'); // Default gray
+  const colors = Array(5).fill("#787c7e"); // Default gray
   const letterCount: { [key: string]: number } = {};
-  
+
   // Count letters in target word
   for (const char of targetWord) {
     letterCount[char] = (letterCount[char] || 0) + 1;
@@ -28,15 +28,15 @@ const calculateGuessColors = (guess: string, targetWord: string): string[] => {
   // First pass: Mark exact matches (green)
   for (let i = 0; i < 5; i++) {
     if (guess[i] === targetWord[i]) {
-      colors[i] = '#6aaa64'; // green
+      colors[i] = "#6aaa64"; // green
       letterCount[guess[i]]--;
     }
   }
 
   // Second pass: Mark yellow matches
   for (let i = 0; i < 5; i++) {
-    if (colors[i] !== '#6aaa64' && letterCount[guess[i]] > 0) {
-      colors[i] = '#c9b458'; // yellow
+    if (colors[i] !== "#6aaa64" && letterCount[guess[i]] > 0) {
+      colors[i] = "#c9b458"; // yellow
       letterCount[guess[i]]--;
     }
   }
@@ -52,12 +52,12 @@ const Victordle = () => {
   const [queueManager, setQueueManager] = useState<QueueManager | null>(null);
   const [currentGame, setCurrentGame] = useState<GameState | null>(null);
   const [grid, setGrid] = useState<string[][]>(
-    Array.from({ length: 6 }, () => Array(5).fill(''))
+    Array.from({ length: 6 }, () => Array(5).fill(""))
   );
-  
+
   const [currentRow, setCurrentRow] = useState<number>(0);
   const [currentCol, setCurrentCol] = useState<number>(0);
-  const [timer, setTimer] = useState<number>(30);
+  const [timer, setTimer] = useState<number>(10);
   const [winner, setWinner] = useState<string | null>(null);
 
   // Optional: Arrays to control keyboard letter colors.
@@ -101,16 +101,59 @@ const Victordle = () => {
     );
     setCurrentRow(0);
     setCurrentCol(0);
-    setTimer(30);
+    setTimer(10);
     setGreenLetters([]);
     setYellowLetters([]);
     setGrayLetters([]);
   };
 
+  const handleTurnTimeout = async () => {
+    if (!currentGame) return;
+    
+    // Find the other player's ID (currentGame.currentTurn holds the ID of the active player)
+    const nextTurn = Object.keys(currentGame.players).find(
+    (id) => id !== currentGame.currentTurn
+    );
+    
+    if (!nextTurn) return;
+    
+    const updates: Partial<GameState> = {
+    currentTurn: nextTurn,
+    lastMoveTimestamp: Date.now(),
+    };
+    
+    // Update the game state on Firestore
+    await gameManager.updateGameState(currentGame.id, updates);
+    
+    // Reset the timer for the new turn
+    setTimer(10);
+    };
+
+    useEffect(() => {
+      // Only run the countdown if the game is active
+      if (!currentGame || currentGame.status === "finished") return;
+      
+      const countdown = setInterval(() => {
+      setTimer((prevTimer) => {
+      if (prevTimer <= 1) {
+      // Time's up for the current turn: pass the turn
+      handleTurnTimeout();
+      // Return 10 for the new turn's timer (or 10 if you decide to reset immediately)
+      return 10;
+      }
+      return prevTimer - 1;
+      });
+      }, 1000);
+      
+      return () => clearInterval(countdown);
+      }, [currentGame?.currentTurn, currentGame?.status]);
+
   useEffect(() => {
     if (currentGame) {
-      const newGrid = Array(6).fill('').map(() => Array(5).fill(''));
-      
+      const newGrid = Array(6)
+        .fill("")
+        .map(() => Array(5).fill(""));
+
       // Combine guesses from both players in alternating order
       const combinedGuesses: Array<{ word: string; colors: string[] }> = [];
       const maxGuesses = Math.max(
@@ -145,7 +188,7 @@ const Victordle = () => {
     const yellow: string[] = [];
     const gray: string[] = [];
 
-    guesses.forEach(guess => {
+    guesses.forEach((guess) => {
       for (let i = 0; i < guess.length; i++) {
         const letter = guess[i];
         if (word[i] === letter) {
@@ -170,14 +213,16 @@ const Victordle = () => {
     const colors = calculateGuessColors(guess, currentGame.word);
 
     const updates: Partial<GameState> = {
-      currentTurn: Object.keys(currentGame.players).find(id => id !== currentUserId)!,
+      currentTurn: Object.keys(currentGame.players).find(
+        (id) => id !== currentUserId
+      )!,
       lastMoveTimestamp: Date.now(),
     };
 
     // Update guesses with colors
     const playerGuesses = [
       ...currentGame.players[currentUserId].guesses,
-      { word: guess, timestamp: Date.now(), colors }
+      { word: guess, timestamp: Date.now(), colors },
     ];
 
     updates.players = {
@@ -190,10 +235,10 @@ const Victordle = () => {
 
     // Check win/loss conditions
     if (guess === currentGame.word) {
-      updates.status = 'finished';
+      updates.status = "finished";
       await playerManager.updateScore(currentUserId, 10);
     } else if (playerGuesses.length === 6) {
-      updates.status = 'finished';
+      updates.status = "finished";
     }
     console.log("Updates: ");
     console.log(updates);
@@ -203,34 +248,37 @@ const Victordle = () => {
 
   // Modified handleKeyPress
   const handleKeyPress = async (key: string) => {
-    if (!currentGame || 
-        currentGame.currentTurn !== currentUserId || 
-        currentGame.status === 'finished') return;
-  
+    if (
+      !currentGame ||
+      currentGame.currentTurn !== currentUserId ||
+      currentGame.status === "finished"
+    )
+      return;
+
     // Use a deep copy of the grid so that each row is recreated.
     const newGrid = grid.map((row) => [...row]);
-  
-    if (key === 'ENTER') {
+
+    if (key === "ENTER") {
       if (currentCol === 5) {
         // Capture the guessed word from the current row.
-        const guess = newGrid[currentRow].join('');
+        const guess = newGrid[currentRow].join("");
         // The guess remains on the grid; simply submit it.
         await submitGuess(guess);
       }
       // Do not clear the grid row; let it remain as a past guess.
       return;
     }
-  
-    if (key === 'BACKSPACE') {
+
+    if (key === "BACKSPACE") {
       if (currentCol > 0) {
-        newGrid[currentRow][currentCol - 1] = '';
+        newGrid[currentRow][currentCol - 1] = "";
         setCurrentCol(currentCol - 1);
       }
       // Update grid state so that the deletion is shown.
       setGrid(newGrid);
       return;
     }
-  
+
     if (currentCol < 5) {
       newGrid[currentRow][currentCol] = key.toUpperCase();
       setCurrentCol(currentCol + 1);
@@ -241,10 +289,10 @@ const Victordle = () => {
 
   // Add game completion check
   useEffect(() => {
-    if (currentGame?.status === 'finished') {
+    if (currentGame?.status === "finished") {
       // Find winner by checking who submitted the correct guess
-      const winner = Object.entries(currentGame.players).find(([_, player]) => 
-        player.guesses.some(g => g.word === currentGame.word)
+      const winner = Object.entries(currentGame.players).find(([_, player]) =>
+        player.guesses.some((g) => g.word === currentGame.word)
       );
       if (winner) {
         setWinner(winner[0]);
@@ -261,12 +309,15 @@ const Victordle = () => {
       const graySet = new Set<string>();
 
       // Get all guesses from both players in timestamp order
-      const allGuesses = currentGame.playerOrder.reduce((acc, playerId) => 
-        [...acc, ...currentGame.players[playerId].guesses], [] as GuessColors[]
-      ).sort((a, b) => a.timestamp - b.timestamp);
+      const allGuesses = currentGame.playerOrder
+        .reduce(
+          (acc, playerId) => [...acc, ...currentGame.players[playerId].guesses],
+          [] as GuessColors[]
+        )
+        .sort((a, b) => a.timestamp - b.timestamp);
 
       // Process each guess from both players
-      allGuesses.forEach(guess => {
+      allGuesses.forEach((guess) => {
         const word = guess.word;
         const colors = guess.colors;
 
@@ -274,16 +325,19 @@ const Victordle = () => {
           const letter = word[i].toUpperCase();
           const color = colors[i];
 
-          if (color === '#6aaa64') { // green
+          if (color === "#6aaa64") {
+            // green
             // Remove from other sets if exists
             yellowSet.delete(letter);
             graySet.delete(letter);
             greenSet.add(letter);
-          } else if (color === '#c9b458' && !greenSet.has(letter)) { // yellow
+          } else if (color === "#c9b458" && !greenSet.has(letter)) {
+            // yellow
             // Only add to yellow if not in green
             graySet.delete(letter);
             yellowSet.add(letter);
-          } else if (!greenSet.has(letter) && !yellowSet.has(letter)) { // gray
+          } else if (!greenSet.has(letter) && !yellowSet.has(letter)) {
+            // gray
             // Only add to gray if not in green or yellow
             graySet.add(letter);
           }
@@ -315,8 +369,13 @@ const Victordle = () => {
     return (
       <View style={styles.matchmakingContainer}>
         <Text style={styles.matchmakingTitle}>Welcome to Victordle!</Text>
-        <Text style={styles.matchmakingSubtitle}>Challenge other players in real-time</Text>
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearchStart}>
+        <Text style={styles.matchmakingSubtitle}>
+          Challenge other players in real-time
+        </Text>
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={handleSearchStart}
+        >
           <Text style={styles.searchButtonText}>Search for Match</Text>
         </TouchableOpacity>
       </View>
@@ -338,54 +397,81 @@ const Victordle = () => {
       {currentGame && (
         <>
           <View style={styles.playerInfo}>
-            <Text
-              style={[
-                styles.player,
-                currentGame.currentTurn ===
-                  Object.keys(currentGame.players)[0] && styles.activePlayer,
-              ]}
-            >
-              {
-                currentGame.players[Object.keys(currentGame.players)[0]]
-                  .username
-              }
-            </Text>
+            <View style={styles.playerContainer}>
+              <Text
+                style={[
+                  styles.player,
+                  currentGame.currentTurn === currentGame.playerOrder[0] &&
+                    styles.activePlayer,
+                ]}
+              >
+                {currentGame.players[currentGame.playerOrder[0]].username}
+              </Text>
+              {currentGame.playerOrder[0] === currentUserId ? (
+                currentGame.currentTurn === currentUserId ? (
+                  <Text style={styles.turnIndicator}>Your Turn</Text>
+                ) : (
+                  <Text style={styles.turnIndicator}>Waiting</Text>
+                )
+              ) : (
+                currentGame.currentTurn === currentGame.playerOrder[0] && (
+                  <Text style={styles.turnIndicator}>Opponent's Turn</Text>
+                )
+              )}
+            </View>
+
             <Text style={styles.timer}>⏱ {timer}s</Text>
-            <Text
-              style={[
-                styles.player,
-                currentGame.currentTurn ===
-                  Object.keys(currentGame.players)[1] && styles.activePlayer,
-              ]}
-            >
-              {
-                currentGame.players[Object.keys(currentGame.players)[1]]
-                  .username
-              }
-            </Text>
+
+            <View style={styles.playerContainer}>
+              <Text
+                style={[
+                  styles.player,
+                  currentGame.currentTurn === currentGame.playerOrder[1] &&
+                    styles.activePlayer,
+                ]}
+              >
+                {currentGame.players[currentGame.playerOrder[1]].username}
+              </Text>
+              {currentGame.playerOrder[1] === currentUserId ? (
+                currentGame.currentTurn === currentUserId ? (
+                  <Text style={styles.turnIndicator}>Your Turn</Text>
+                ) : (
+                  <Text style={styles.turnIndicator}>Waiting</Text>
+                )
+              ) : (
+                currentGame.currentTurn === currentGame.playerOrder[1] && (
+                  <Text style={styles.turnIndicator}>Opponent's Turn</Text>
+                )
+              )}
+            </View>
           </View>
           <View style={styles.grid}>
             {grid.map((row, rowIndex) => (
               <View key={rowIndex} style={styles.row}>
                 {row.map((letter, colIndex) => {
                   // Get the colors from the stored guesses
-                  let backgroundColor = '#f9f9f9';
+                  let backgroundColor = "#f9f9f9";
                   if (currentGame) {
-                    const allGuesses = currentGame.playerOrder.reduce((acc, playerId) => 
-                      [...acc, ...currentGame.players[playerId].guesses], [] as GuessColors[]);
-                    const sortedGuesses = allGuesses.sort((a, b) => a.timestamp - b.timestamp);
+                    const allGuesses = currentGame.playerOrder.reduce(
+                      (acc, playerId) => [
+                        ...acc,
+                        ...currentGame.players[playerId].guesses,
+                      ],
+                      [] as GuessColors[]
+                    );
+                    const sortedGuesses = allGuesses.sort(
+                      (a, b) => a.timestamp - b.timestamp
+                    );
                     if (sortedGuesses[rowIndex]) {
-                      backgroundColor = sortedGuesses[rowIndex].colors[colIndex];
+                      backgroundColor =
+                        sortedGuesses[rowIndex].colors[colIndex];
                     }
                   }
 
                   return (
                     <View
                       key={colIndex}
-                      style={[
-                        styles.cell,
-                        letter && { backgroundColor },
-                      ]}
+                      style={[styles.cell, letter && { backgroundColor }]}
                     >
                       <Text style={styles.cellText}>{letter}</Text>
                     </View>
@@ -394,15 +480,15 @@ const Victordle = () => {
               </View>
             ))}
           </View>
-          
-          {currentGame.status === 'finished' ? (
+
+          {currentGame.status === "finished" ? (
             <View style={styles.gameOverContainer}>
               <Text style={styles.gameOverText}>
-                {winner ? (
-                  winner === currentUserId ? 
-                    'You won! 🎉' : 
-                    'Better luck next time!'
-                ) : 'Game Over!'}
+                {winner
+                  ? winner === currentUserId
+                    ? "You won! 🎉"
+                    : "Better luck next time!"
+                  : "Game Over!"}
               </Text>
               <Text style={styles.wordReveal}>
                 The word was: {currentGame.word}
@@ -430,19 +516,49 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+  playerContainer: {
+    flex: 1,
+    alignItems: "center",
+  },
   player: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#fff",
   },
   activePlayer: {
-    color: "blue",
+    color: "blue", // active player's name is highlighted
   },
   timer: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#fff",
+    textAlign: "center",
   },
+  turnIndicator: {
+    fontSize: 12,
+    color: "lightgray",
+    marginTop: 4,
+    textAlign: "center",
+  },
+  // playerInfo: {
+  //   flexDirection: "row",
+  //   justifyContent: "space-between",
+  //   alignItems: "center",
+  //   marginBottom: 20,
+  // },
+  // player: {
+  //   fontSize: 16,
+  //   fontWeight: "bold",
+  //   color: "#fff",
+  // },
+  // activePlayer: {
+  //   color: "blue",
+  // },
+  // timer: {
+  //   fontSize: 16,
+  //   fontWeight: "bold",
+  //   color: "#fff",
+  // },
   grid: {
     alignSelf: "center",
     marginBottom: 20,
@@ -519,21 +635,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   gameOverContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 20,
     padding: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: "rgba(255,255,255,0.1)",
     borderRadius: 10,
   },
   gameOverText: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 10,
   },
   wordReveal: {
     fontSize: 18,
-    color: '#fff',
+    color: "#fff",
     opacity: 0.8,
   },
 });
